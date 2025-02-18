@@ -18,11 +18,13 @@
 using Rock.Attribute;
 using Rock.Constants;
 using Rock.Data;
+using Rock.Enums.AI;
 using Rock.Model;
 using Rock.Security;
 using Rock.ViewModels.Blocks;
 using Rock.ViewModels.Blocks.Prayer.PrayerRequestDetail;
 using Rock.Web.Cache;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -254,6 +256,17 @@ namespace Rock.Blocks.Prayer
                 return null;
             }
 
+            var flags = Enum.GetValues( typeof( ModerationFlags ) );
+            var moderationFlags = new List<string>();
+
+            foreach ( ModerationFlags flag in flags )
+            {
+                if ( entity.ModerationFlags.HasFlag( flag ) && flag != ModerationFlags.None )
+                {
+                    moderationFlags.Add( flag.ToString().SplitCase() );
+                }
+            }
+
             return new PrayerRequestBag
             {
                 IdKey = entity.IdKey,
@@ -274,7 +287,8 @@ namespace Rock.Blocks.Prayer
                 PrayerCount = entity.PrayerCount,
                 RequestedByPersonAlias = entity.RequestedByPersonAlias.ToListItemBag(),
                 Text = entity.Text,
-                FullName = entity.FullName
+                FullName = entity.FullName,
+                ModerationFlags = moderationFlags,
             };
         }
 

@@ -116,7 +116,7 @@
      * The entity name to display in the block panel.
      */
     const panelName = computed((): string => {
-        if(panelMode.value == DetailPanelMode.Edit) {
+        if (panelMode.value == DetailPanelMode.Edit) {
             return "Edit Prayer Request";
         }
         return `${prayerRequestViewBag.value?.requestedByPersonAlias?.text ?? ""} Prayer Request`;
@@ -154,7 +154,7 @@
             });
         }
 
-        if(prayerRequestViewBag.value?.category?.text){
+        if (prayerRequestViewBag.value?.category?.text) {
             labels.push({
                 title: `${prayerRequestViewBag.value?.category?.text}`,
                 type: "default"
@@ -165,6 +165,15 @@
             title: `${prayerRequestViewBag.value?.isApproved ? "Approved" : "Pending"}`,
             type: `${prayerRequestViewBag.value?.isApproved ? "success" : "warning"}`
         });
+
+        if (prayerRequestViewBag.value?.moderationFlags) {
+            prayerRequestViewBag.value.moderationFlags.forEach(flag => {
+                labels.push({
+                    title: `${flag}`,
+                    type: "warning"
+                });
+            });
+        }
 
         return labels;
     });

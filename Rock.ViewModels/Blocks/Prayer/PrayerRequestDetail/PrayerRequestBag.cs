@@ -16,7 +16,9 @@
 //
 
 using System;
+using System.Collections.Generic;
 
+using Rock.Enums.AI;
 using Rock.ViewModels.Utility;
 
 namespace Rock.ViewModels.Blocks.Prayer.PrayerRequestDetail
@@ -116,5 +118,10 @@ namespace Rock.ViewModels.Blocks.Prayer.PrayerRequestDetail
         /// Gets the FullName as it needs to be sent to the frontend
         /// </summary>
         public string FullName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of Moderation Flags.
+        /// </summary>
+        public List<string> ModerationFlags { get; set; }
     }
 }
