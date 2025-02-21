@@ -175,6 +175,13 @@
             });
         }
 
+        if (prayerRequestViewBag.value?.sentiment) {
+            labels.push({
+                title: `${prayerRequestViewBag.value?.sentiment}`,
+                type: "info"
+            });
+        }
+
         return labels;
     });
 
@@ -185,7 +192,9 @@
     const options = computed((): PrayerRequestDetailOptionsBag => {
         return config.options ?? {
             isCampusRequired: false,
-            isLastNameRequired: false
+            isLastNameRequired: false,
+            isAIDisclaimerEnabled: false,
+            aiDisclaimer: "",
         };
     });
 

@@ -93,6 +93,21 @@ namespace Rock.Blocks.Prayer
         Category = "",
         Order = 6 )]
 
+    [BooleanField(
+        "Enable AI Disclaimer",
+        Description = "If enabled and the PrayerRequest Text was sent to an AI automation the configured AI Disclaimer will be shown.",
+        DefaultBooleanValue = true,
+        Key = AttributeKey.EnableAIDisclaimer,
+        Order = 7 )]
+
+    [TextField(
+        "AI Disclaimer",
+        Description = "The message to display indicating the Prayer Request text may have been modified by an AI automation.",
+        IsRequired = false,
+        DefaultValue = "This request may have been modified by an AI for formatting and privacy. Please be aware that errors may be present.",
+        Key = AttributeKey.AIDisclaimer,
+        Order = 8 )]
+
     #endregion
 
     [Rock.SystemGuid.EntityTypeGuid( "d1e21128-c831-4535-b8df-0ec928dcbba4" )]
@@ -124,6 +139,8 @@ namespace Rock.Blocks.Prayer
             public const string SetCurrentPersonToRequester = "SetCurrentPersonToRequester";
             public const string DefaultCategory = "DefaultCategory";
             public const string ExpireDays = "ExpireDays";
+            public const string EnableAIDisclaimer = "EnableAIDisclaimer";
+            public const string AIDisclaimer = "AIDisclaimer";
         }
 
         #endregion
@@ -159,7 +176,9 @@ namespace Rock.Blocks.Prayer
             var options = new PrayerRequestDetailOptionsBag
             {
                 IsLastNameRequired = GetAttributeValue( AttributeKey.RequireLastName ).AsBooleanOrNull() ?? true,
-                IsCampusRequired = GetAttributeValue( AttributeKey.RequireCampus ).AsBooleanOrNull() ?? false
+                IsCampusRequired = GetAttributeValue( AttributeKey.RequireCampus ).AsBooleanOrNull() ?? false,
+                IsAIDisclaimerEnabled = GetAttributeValue( AttributeKey.EnableAIDisclaimer ).AsBooleanOrNull() ?? true,
+                AIDisclaimer = GetAttributeValue( AttributeKey.AIDisclaimer )
             };
             return options;
         }
@@ -289,6 +308,8 @@ namespace Rock.Blocks.Prayer
                 Text = entity.Text,
                 FullName = entity.FullName,
                 ModerationFlags = moderationFlags,
+                OriginalRequest = entity.OriginalRequest,
+                Sentiment = entity.SentimentEmotionValueId.HasValue ? DefinedValueCache.GetName( entity.SentimentEmotionValueId ) : string.Empty
             };
         }
 

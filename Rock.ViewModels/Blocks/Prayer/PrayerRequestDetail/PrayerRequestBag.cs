@@ -123,5 +123,15 @@ namespace Rock.ViewModels.Blocks.Prayer.PrayerRequestDetail
         /// Gets or sets the list of Moderation Flags.
         /// </summary>
         public List<string> ModerationFlags { get; set; }
+
+        /// <summary>
+        /// Gets or sets the original prayer request before AI formatting.
+        /// </summary>
+        public string OriginalRequest { get; set; }
+
+        /// <summary>
+        /// Gets or sets the sentiment of the prayer request.
+        /// </summary>
+        public string Sentiment { get; set; }
     }
 }

@@ -56,6 +56,11 @@
                          label="Request"
                          textMode="multiline"
                          rules="required" />
+                <RockLiteral v-if="!isNullOrWhiteSpace(originalRequest)"
+                             label="Original Request"
+                             labelCssClass="text-muted">
+                    <span class="text-muted">{{ originalRequest }}</span>
+                </RockLiteral>
                 <TextBox v-model="answer"
                          textMode="multiline"
                          label="Answer" />
@@ -90,6 +95,8 @@
     import { emptyGuid, toGuidOrNull } from "@Obsidian/Utility/guid";
     import { Guid } from "@Obsidian/Types";
     import HighlightLabel from "@Obsidian/Controls/highlightLabel.obs";
+    import RockLiteral from "@Obsidian/Controls/rockLiteral.obs";
+    import { isNullOrWhiteSpace } from "@Obsidian/Utility/stringUtils";
 
     const props = defineProps({
         modelValue: {
@@ -112,6 +119,7 @@
 
     const attributes = ref(props.modelValue.attributes ?? {});
     const attributeValues = ref(props.modelValue.attributeValues ?? {});
+    const originalRequest = ref<string>(props.modelValue.originalRequest ?? "");
     const isActive = propertyRef(props.modelValue.isActive ?? true, "IsActive");
     const requestedByPersonAlias = propertyRef(props.modelValue.requestedByPersonAlias ?? undefined, "RequestedByPersonAliasId");
     const isPending = propertyRef(!(props.modelValue.isApproved ?? false), "IsApproved");
