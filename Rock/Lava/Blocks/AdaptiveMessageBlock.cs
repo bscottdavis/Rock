@@ -225,7 +225,6 @@ namespace Rock.Lava.Blocks
                 }
 
                 var adaptationQry = adaptiveMessages
-
                     .Select( m => new
                     {
                         AdaptiveMessage = m,
