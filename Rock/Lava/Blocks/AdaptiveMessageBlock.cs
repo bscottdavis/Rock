@@ -185,7 +185,7 @@ namespace Rock.Lava.Blocks
                                         i.EntityId.HasValue &&
                                         i.PersonAliasId == personAliasId );
 
-                        // Retrieves adaptations from our list of valid adaptations where ViewSaturationCount is set.
+                        // Retrieves adaptations where ViewSaturationCount is set.
                         var adaptationsQry = new AdaptiveMessageAdaptationService( rockContext )
                             .Queryable()
                             .Where( a => a.ViewSaturationCount.HasValue );
@@ -204,7 +204,7 @@ namespace Rock.Lava.Blocks
                                 }
                             )
                             .Where( joined => !joined.SaturationDays.HasValue ||
-                                             joined.InteractionDateTime >= DbFunctions.AddDays( currentDate, -joined.SaturationDays.Value ) )
+                                            joined.InteractionDateTime >= DbFunctions.AddDays( currentDate, -joined.SaturationDays.Value ) )
                             .GroupBy( joined => joined.AdaptationId )
                             .Select( g => new { AdaptationId = g.Key, InteractionCount = g.Count() } )
                             .ToDictionary( g => g.AdaptationId, g => g.InteractionCount );
@@ -223,6 +223,7 @@ namespace Rock.Lava.Blocks
                     personSegmentIdList = LavaPersonalizationHelper.GetPersonalizationSegmentIdListForPersonFromContextCookie(
                         context, System.Web.HttpContext.Current, person );
                 }
+
                 var adaptationQry = adaptiveMessages
 
                     .Select( m => new
@@ -248,8 +249,8 @@ namespace Rock.Lava.Blocks
 
                 AddLavaMergeFieldsToContext( context, adaptationQry.ToList(), person );
 
-                // Tracks interactions if explicitly enabled or (if tracking is undefined and the adaptation has a saturation count value).
-                if (  isTrackViews == true || isTrackViews == null )
+                // Tracks interactions if explicitly enabled (set to true) or if tracking is undefined (set to null) and the given adaptation has a value for View Saturation Count.
+                if ( isTrackViews == true || isTrackViews == null )
                 {
                     foreach ( var adaptation in adaptationQry )
                     {
@@ -353,7 +354,7 @@ namespace Rock.Lava.Blocks
         private void AddLavaMergeFieldsToContext( ILavaRenderContext context, List<AdaptiveMessageAdaptationCache> adaptations, Person person )
         {
             var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( null );
-            mergeFields.Add( "Person", person ); 
+            mergeFields.Add( "Person", person );
 
             var resolvedAdaptations = adaptations.Select( a => new AdaptiveMessageAdaptation
             {
