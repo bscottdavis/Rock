@@ -610,10 +610,10 @@ namespace Rock.Communication
 
             templateRockEmailMessage.FromPersonId = emailMessage.FromPersonId;
 
-            templateRockEmailMessage.FromEmail = emailMessage.FromEmail;
+            templateRockEmailMessage.FromEmail = emailMessage.FromEmail.IsNullOrWhiteSpace() ? globalAttributes.GetValue( "OrganizationEmail" ) : emailMessage.FromEmail;
             templateRockEmailMessage.FromName = emailMessage.FromName;
 
-            if ( emailMessage.FromEmail.IsNullOrWhiteSpace() )
+            if ( templateRockEmailMessage.FromEmail.IsNullOrWhiteSpace() )
             {
                 return null;
             }
@@ -738,8 +738,8 @@ namespace Rock.Communication
 
             var globalAttributes = GlobalAttributesCache.Get();
 
-            var fromEmail = GetFromAddress( emailMessage, mergeFields, globalAttributes );
-            var fromName = GetFromName( emailMessage, mergeFields, globalAttributes );
+            var fromEmail = GetFromAddress( emailMessage, rockMessageRecipient.MergeFields, globalAttributes );
+            var fromName = GetFromName( emailMessage, rockMessageRecipient.MergeFields, globalAttributes );
 
             var fromMailAddress = new MailAddress( fromEmail, fromName );
             var checkResult = CheckSafeSender( new List<string> { toEmailAddress.EmailAddress }, fromMailAddress, organizationEmail );
