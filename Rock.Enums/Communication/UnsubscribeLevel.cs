@@ -14,33 +14,33 @@
 // limitations under the License.
 // </copyright>
 //
-using System;
 
-using Rock.Model;
-
-namespace Rock.Communication.Chat.DTO
+namespace Rock.Model
 {
     /// <summary>
-    /// Represents the mapping between a <see cref="Person"/> and their respective <see cref="ChatUser"/> within the
-    /// external chat systemS.
+    /// Represents the level at which an individual can unsubscribe from communications.
     /// </summary>
-    internal class RockChatUserPersonKey
+    [Enums.EnumDomain( "Communication" )]
+    public enum UnsubscribeLevel
     {
         /// <summary>
-        /// Gets or sets the <see cref="Person"/> identifier.
+        /// Unsubscribe from all communications.
         /// </summary>
-        public int PersonId { get; set; }
+        All = 1,
 
         /// <summary>
-        /// Gets or sets this person's chat-specific <see cref="PersonAlias"/> unique identifier.
+        /// Unsubscribe from bulk communications.
         /// </summary>
-        public Guid? ChatAliasGuid { get; set; }
+        Bulk = 2,
 
         /// <summary>
-        /// Gets the <see cref="ChatUser.Key"/> for this person.
+        /// Unsubscribe from communication lists.
         /// </summary>
-        public string ChatUserKey => this.ChatAliasGuid.HasValue
-            ? ChatHelper.GetChatUserKey( this.ChatAliasGuid.Value )
-            : null;
+        CommunicationList = 3,
+
+        /// <summary>
+        /// Unsubscribe from communication campaigns.
+        /// </summary>
+        Campaign = 4,
     }
 }

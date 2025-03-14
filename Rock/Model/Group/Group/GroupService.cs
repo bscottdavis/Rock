@@ -22,9 +22,10 @@ using System.Data.Entity.Spatial;
 using System.Linq;
 using System.Text;
 
+using Rock.Communication.Chat;
+using Rock.Communication.Chat.DTO;
 using Rock.Data;
 using Rock.Model.Groups.Group.Options;
-using Rock.Observability;
 using Rock.Web.Cache;
 
 using Z.EntityFramework.Plus;
@@ -159,6 +160,67 @@ namespace Rock.Model
             }
 
             return qry;
+        }
+
+        /// <summary>
+        /// Gets the mapping between all <see cref="ChatChannel.Key"/>s and their respective <see cref="Group"/> identifiers.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="Dictionary{TKey, TValue}"/> where the key is the <see cref="ChatChannel.Key"/> and the value is
+        /// a <see cref="RockChatGroup"/> for the corresponding <see cref="Group"/>.
+        /// </returns>
+        internal Dictionary<string, RockChatGroup> GetRockChatGroupByChannelKeys()
+        {
+            return GetChatEnabled( shouldTrack: false )
+                .ToDictionary(
+                    g => ChatHelper.GetChatChannelKey( g ),
+                    g => new RockChatGroup
+                    {
+                        GroupId = g.Id,
+                        Name = g.Name
+                    }
+                );
+        }
+
+        /// <summary>
+        /// Gets the identifier of the group that represents a chat channel.
+        /// </summary>
+        /// <param name="chatChannelKey">The key that identifies the chat channel.</param>
+        /// <returns>The group identifier or <see langword="null"/> if not found.</returns>
+        public int? GetChatChannelGroupId( string chatChannelKey )
+        {
+            if ( chatChannelKey.IsNullOrWhiteSpace() )
+            {
+                return null;
+            }
+
+            // Check the key itself first, as the group ID might be embedded within.
+            var groupId = ChatHelper.GetGroupId( chatChannelKey );
+            if ( groupId.HasValue )
+            {
+                return groupId.Value;
+            }
+
+            // Next, check to see if we already have this mapping in the cache.
+            var cacheKey = ChatHelper.GetChatChannelGroupIdCacheKey( chatChannelKey );
+            groupId = RockCache.Get( cacheKey ) as int?;
+            if ( groupId.HasValue )
+            {
+                return groupId.Value;
+            }
+
+            // Fall back to looking in the database and caching if we find it.
+            groupId = Queryable()
+                .Where( g => g.ChatChannelKey == chatChannelKey )
+                .Select( g => g.Id )
+                .FirstOrDefault();
+
+            if ( groupId.HasValue )
+            {
+                RockCache.AddOrUpdate( cacheKey, null, groupId.Value, RockDateTime.Now.AddSeconds( 300 ) );
+            }
+
+            return groupId;
         }
 
         #region Geospatial Queries

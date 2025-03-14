@@ -16,9 +16,12 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 
+using Rock.Communication.Chat;
+using Rock.Communication.Chat.DTO;
 using Rock.Data;
 
 namespace Rock.Model
@@ -362,6 +365,45 @@ namespace Rock.Model
         public IQueryable<PersonAlias> GetPrimaryAliasQuery()
         {
             return this.Queryable().Where( a => a.PersonId == a.AliasPersonId && a.AliasPersonId.HasValue );
+        }
+
+        /// <summary>
+        /// Returns a Queryable of chat-specific Person Aliases.
+        /// </summary>
+        /// <returns>A Queryable of chat-specific Person Aliases.</returns>
+        internal IQueryable<PersonAlias> GetChatPersonAliasesQuery()
+        {
+            return this.Queryable().Where( a => a.ForeignKey.StartsWith( ChatHelper.ChatPersonAliasForeignKeyPrefix ) );
+        }
+
+        /// <summary>
+        /// Gets the mapping between all <see cref="ChatUser.Key"/>s and each respective chat-specific
+        /// <see cref="PersonAlias"/> identifier.
+        /// </summary>
+        /// <param name="includeDeceased">Whether to include deceased individuals in the results.</param>
+        /// <returns>
+        /// A <see cref="Dictionary{TKey, TValue}"/> where the key is the <see cref="ChatUser.Key"/> and the value is
+        /// the <see cref="PersonAlias"/> identifier.
+        /// </returns>
+        /// <remarks>
+        /// A given <see cref="Person"/> might be represented more than once in the returned dictionary if they have
+        /// more than one chat-specific <see cref="PersonAlias"/>.
+        /// </remarks>
+        internal Dictionary<string, int> GetChatPersonAliasIdByChatUserKeys( bool includeDeceased = false )
+        {
+            var rockContext = this.Context as RockContext;
+
+            var chatAliasQry = GetChatPersonAliasesQuery();
+            if ( !includeDeceased )
+            {
+                chatAliasQry = chatAliasQry.Where( pa => !pa.Person.IsDeceased );
+            }
+
+            return chatAliasQry
+                .ToDictionary(
+                    pa => ChatHelper.GetChatUserKey( pa.Guid ),
+                    pa => pa.Id
+                );
         }
     }
 }
