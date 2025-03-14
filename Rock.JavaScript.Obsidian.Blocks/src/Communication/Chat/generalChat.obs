@@ -1,0 +1,85 @@
+<!-- filepath: c:\Github\Rock\Develop\Rock.JavaScript.Obsidian.Blocks\src\Communication\Chat\generalChat.obs -->
+<template>
+    <Panel type="block">
+        <RockForm>
+            <div style="height: 100%;">
+                <!-- Placeholder for the React component -->
+                <div id="react-component-placeholder" style="display: flex; height: 100%; margin: 0;"></div>
+            </div>
+        </RockForm>
+    </Panel>
+
+</template>
+
+<script setup lang="ts">
+    import { ref, onMounted, onUnmounted } from "vue";
+    import { useConfigurationValues, useInvokeBlockAction } from "@Obsidian/Utility/block";
+    import { loadJavaScriptAsync } from "@Obsidian/Utility/page";
+    import { useSuspense } from "@Obsidian/Utility/suspense";
+    import { newGuid } from "@Obsidian/Utility/guid";
+    import Panel from "@Obsidian/Controls/panel.obs";
+    import RockForm from "@Obsidian/Controls/rockForm.obs";
+
+    const invokeBlockAction = useInvokeBlockAction();
+    let libraryObject: IRockStreamChatStatic | null = null;
+    let libraryPromise: Promise<boolean> | null = null;
+    let reactComponentInstance: any | null = null;
+    let mountGuid = newGuid();
+    let blockActionSuspenseGuid = newGuid();
+
+    onMounted(async () => {
+        const streamChatObject = await getStreamChatObject();
+        await getData(); // Load the chat data before mounting the component
+        // reactComponentInstance = streamChatObject.mount("react-component-placeholder");
+        suspense?.completeAsyncOperation(mountGuid);
+    });
+
+    onUnmounted(() => {
+        if (libraryObject && reactComponentInstance) {
+            libraryObject.unmount(reactComponentInstance);
+        }
+    });
+
+    // At this point the base picker will be not be instantiated yet.
+    // Start loading the options so we can determine if we should
+    // be visible or not.
+    const suspense = useSuspense();
+    suspense?.startAsyncOperation(mountGuid)
+
+    async function getData() {
+        console.log("Fetching chat data...");
+        var chatData = await invokeBlockAction("GetChatData", {});
+        console.log(chatData);
+    }
+
+    /**
+     * Gets the real time object from window.Rock.StreamChat. If it is not available
+     * then an exception will be thrown.
+     *
+     * @returns An instance of IRockStreamChatStatic.
+     */
+    async function getStreamChatObject(): Promise<IRockStreamChatStatic> {
+        if (libraryObject) {
+            return libraryObject;
+        }
+
+        if (!libraryPromise) {
+            libraryPromise = loadJavaScriptAsync("/Scripts/Rock/streamchat.js", () => !!window["Rock"]?.["StreamChat"]);
+        }
+
+        if (!await libraryPromise) {
+            throw new Error("Unable to load StreamChat library.");
+        }
+
+        console.log("StreamChat library loaded.");
+        libraryObject = window["Rock"]?.["StreamChat"] as IRockStreamChatStatic;
+
+        console.log(window["Rock"]?.["StreamChat"]);
+        return libraryObject;
+    }
+
+    interface IRockStreamChatStatic {
+        mount(elementId: string): unknown | undefined;
+        unmount(rootInstance: unknown): void;
+    }
+</script>

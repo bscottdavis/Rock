@@ -12,13 +12,15 @@ namespace Rock.Blocks.Communication.Chat
     [DisplayName( "Chat" )]
     [Category( "Communication" )]
     [Description( "Integrate StreamChat into your Rock Mobile application." )]
-    [SupportedSiteTypes( SiteType.Mobile )]
-    [IconCssClass( "fa-comments" )]
+    [SupportedSiteTypes( SiteType.Mobile | SiteType.Web )]
+    [IconCssClass( "fa fa-comments" )]
 
     [Rock.SystemGuid.EntityTypeGuid( "B3D6F875-1589-4543-9E76-5C41201B465B" )]
     [Rock.SystemGuid.BlockTypeGuid( "723A3F70-87DC-4BA0-A6FB-0AC15B1865B0" )]
     public class GeneralChat : RockBlockType
     {
+        public override string ObsidianFileUrl => base.ObsidianFileUrl;
+
         #region Block Actions
 
         /// <summary>

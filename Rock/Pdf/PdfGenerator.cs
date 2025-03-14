@@ -299,7 +299,6 @@ namespace Rock.Pdf
 
                 _puppeteerBrowser = Puppeteer.LaunchAsync( launchOptions ).Result;
             }
-
             _puppeteerPage = _puppeteerBrowser.NewPageAsync().Result;
             _puppeteerPage.EmulateMediaTypeAsync( this.PDFMediaType ).Wait();
         }

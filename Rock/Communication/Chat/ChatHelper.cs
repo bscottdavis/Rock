@@ -342,7 +342,7 @@ namespace Rock.Communication.Chat
         /// A task representing the asynchronous operation, containing the <see cref="ChatUserAuthentication"/> or
         /// <see langword="null"/> if unable to find the <see cref="ChatUser"/> or get a token.
         /// </returns>
-        public async Task<ChatUserAuthentication> GetChatUserAuthenticationAsync( int personId )
+        public async Task<ChatUserAuthentication> GetChatUserAuthenticationAsync( int personId, bool create )
         {
             ChatUserAuthentication auth = null;
 
@@ -356,7 +356,7 @@ namespace Rock.Communication.Chat
                 var syncCommand = new SyncPersonToChatCommand
                 {
                     PersonId = personId,
-                    ShouldEnsureChatAliasExists = true
+                    ShouldEnsureChatAliasExists = create
                 };
 
                 var createOrUpdateChatUsersResult = await CreateOrUpdateChatUsersAsync( new List<SyncPersonToChatCommand> { syncCommand } );
