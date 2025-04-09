@@ -1,0 +1,137 @@
+<template>
+    <Block panelHeadingCssClass="hidden"
+           style="overflow: hidden;"
+           panelBodyCssClass="overflow-hidden p-0">
+        <RockForm style="height: 100%;">
+            <!-- Placeholder for the React component -->
+            <div id="chat-container" class="rock-streamchat-embed"></div>
+        </RockForm>
+    </Block>
+
+</template>
+
+<script setup lang="ts">
+    import { ref, onMounted, onUnmounted } from "vue";
+    import Block from "@Obsidian/Templates/block";
+    import { useConfigurationValues, useInvokeBlockAction } from "@Obsidian/Utility/block";
+    import { loadJavaScriptAsync } from "@Obsidian/Utility/page";
+    import { useSuspense } from "@Obsidian/Utility/suspense";
+    import { newGuid } from "@Obsidian/Utility/guid";
+    import RockForm from "@Obsidian/Controls/rockForm.obs";
+    import { ChatViewInitializationBox } from "@Obsidian/ViewModels/Blocks/Communication/Chat/ChatView/chatViewInitializationBox";
+    import { ChatPersonDataBag } from "@Obsidian/ViewModels/Blocks/Communication/Chat/ChatView/chatPersonDataBag";
+
+    const invokeBlockAction = useInvokeBlockAction();
+    const configurationValues = useConfigurationValues<ChatViewInitializationBox>();
+
+    let libraryObject: IRockStreamChatStatic | null = null;
+    let libraryPromise: Promise<boolean> | null = null;
+    let reactComponentInstance: any | null = null;
+    let mountGuid = newGuid();
+    let blockActionSuspenseGuid = newGuid();
+
+    onMounted(async () => {
+        let chatConfigurationBag = configurationValues.chatViewConfigurationBag;
+
+        if (!chatConfigurationBag) {
+            return;
+        }
+
+        if (!chatConfigurationBag?.publicApiKey) {
+            return;
+        }
+
+        const streamChatObject = await getStreamChatObject();
+        var chatData = await getData(); // Load the chat data before mounting the component
+
+        if (!chatData || !chatData?.userId || !chatData?.token) {
+            console.error("Failed to load chat data.");
+            return;
+        }
+
+        reactComponentInstance = streamChatObject.mount("chat-container", {
+            "apiKey": chatConfigurationBag.publicApiKey,
+            "userId": chatData.userId,
+            "userToken": chatData?.token,
+            "sharedChannelTypeKey": chatConfigurationBag.sharedChannelTypeKey ?? undefined,
+            "directMessageChannelTypeKey": chatConfigurationBag.directMessageChannelTypeKey ?? undefined,
+            "primaryColor": "#FF0000"
+        });
+        suspense?.completeAsyncOperation(mountGuid);
+    });
+
+    onUnmounted(() => {
+        if (libraryObject && reactComponentInstance) {
+            libraryObject.unmount(reactComponentInstance);
+        }
+    });
+
+    // At this point the base picker will be not be instantiated yet.
+    // Start loading the options so we can determine if we should
+    // be visible or not.
+    const suspense = useSuspense();
+    suspense?.startAsyncOperation(mountGuid)
+
+    async function getData(): Promise<ChatPersonDataBag | null> {
+        try {
+            const result = await invokeBlockAction<ChatPersonDataBag>("GetChatData");
+
+            if (!result.isSuccess) {
+                console.error("Failed to get chat data", result.errorMessage);
+                return null;
+            }
+
+            return result.data;
+        } catch (error) {
+            console.error("Failed to load chat data", error);
+            return null;
+        }
+    }
+
+
+    /**
+     * Gets the real time object from window.Rock.StreamChat. If it is not available
+     * then an exception will be thrown.
+     *
+     * @returns An instance of IRockStreamChatStatic.
+     */
+    async function getStreamChatObject(): Promise<IRockStreamChatStatic> {
+        if (libraryObject) {
+            return libraryObject;
+        }
+
+        if (!libraryPromise) {
+            libraryPromise = loadJavaScriptAsync("/Scripts/Rock/streamchat.js", () => !!window["Rock"]?.["StreamChat"]);
+        }
+
+        if (!await libraryPromise) {
+            throw new Error("Unable to load StreamChat library.");
+        }
+
+        console.log("StreamChat library loaded.");
+        libraryObject = window["Rock"]?.["StreamChat"] as IRockStreamChatStatic;
+
+        console.log(window["Rock"]?.["StreamChat"]);
+        return libraryObject;
+    }
+
+    interface IRockStreamChatStatic {
+        mount(elementId: string, config: ChatComponentProps): unknown | undefined;
+        unmount(rootInstance: unknown): void;
+    }
+
+    interface ChatComponentProps {
+        primaryColor: string;
+        apiKey: string;
+        userId: string;
+        userToken: string;
+        sharedChannelTypeKey?: string;
+        directMessageChannelTypeKey?: string;
+    }
+
+</script>
+<style scoped>
+.rock-streamchat-embed {
+    height: 100%;
+}
+</style>

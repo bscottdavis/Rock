@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Rock.Attribute;
 using Rock.ViewModels.Blocks.Communication.Chat.ChatView;
+using Rock.Web.Cache;
 
 namespace Rock.Blocks.Communication.Chat
 {
@@ -60,6 +61,31 @@ namespace Rock.Blocks.Communication.Chat
         #region Methods
 
         /// <inheritdoc />
+        public override object GetObsidianBlockInitialization()
+        {
+            if( !ChatHelper.IsChatEnabled )
+            {
+                return null;
+            }
+
+            var sharedChannelGroupTypeId = GroupTypeCache.GetId( Rock.SystemGuid.GroupType.GROUPTYPE_CHAT_SHARED_CHANNEL.AsGuid() );
+            var directMessagingChannelGroupTypeId = GroupTypeCache.GetId( Rock.SystemGuid.GroupType.GROUPTYPE_CHAT_DIRECT_MESSAGE.AsGuid() );
+            var sharedChannelGroupStreamKey = ChatHelper.GetChatChannelTypeKey( sharedChannelGroupTypeId.Value );
+            var directMessagingChannelStreamKey = ChatHelper.GetChatChannelTypeKey( directMessagingChannelGroupTypeId.Value );
+
+            return new ChatViewInitializationBox
+            {
+                ChatViewConfigurationBag = new ChatViewConfigurationBag
+                {
+                    FilterSharedChannelsByCampus = FilterSharedChannelsByCampus,
+                    PublicApiKey = ChatHelper.GetChatConfiguration().ApiKey,
+                    SharedChannelTypeKey = sharedChannelGroupStreamKey,
+                    DirectMessageChannelTypeKey = directMessagingChannelStreamKey
+                }
+            };
+        }
+
+        /// <inheritdoc />
         public override object GetMobileConfigurationValues()
         {
             return new
@@ -79,6 +105,11 @@ namespace Rock.Blocks.Communication.Chat
         [BlockAction]
         public BlockActionResult GetChatPersonSettings()
         {
+            if ( !ChatHelper.IsChatEnabled )
+            {
+                return ActionBadRequest( "Chat is not configured." );
+            }
+
             var person = RequestContext.CurrentPerson;
 
             if ( person == null )
@@ -114,6 +145,11 @@ namespace Rock.Blocks.Communication.Chat
         [BlockAction]
         public BlockActionResult UpdateChatPersonSettings( ChatPersonSettingsBag options )
         {
+            if ( !ChatHelper.IsChatEnabled )
+            {
+                return ActionBadRequest( "Chat is not configured." );
+            }
+
             var person = RequestContext.CurrentPerson;
 
             if ( person == null )
@@ -135,6 +171,11 @@ namespace Rock.Blocks.Communication.Chat
         [BlockAction]
         public async Task<BlockActionResult> GetChatData()
         {
+            if ( !ChatHelper.IsChatEnabled )
+            {
+                return ActionBadRequest( "Chat is not configured.");
+            }
+
             if ( RequestContext.CurrentPerson == null )
             {
                 return ActionUnauthorized( "You must be logged in to view chat." );
@@ -146,7 +187,7 @@ namespace Rock.Blocks.Communication.Chat
             {
                 var chatUserAuth = await chatHelper.GetChatUserAuthenticationAsync( person.Id, true );
 
-                return ActionOk( new
+                return ActionOk( new ChatPersonDataBag
                 {
                     Token = chatUserAuth.Token,
                     UserId = chatUserAuth.ChatUserKey

@@ -17,18 +17,18 @@
 namespace Rock.ViewModels.Blocks.Communication.Chat.ChatView
 {
     /// <summary>
-    /// A bag of settings for a chat person.
+    /// Represents a data container for a person's chat-related identification information.
     /// </summary>
-    public class ChatPersonSettingsBag
+    public class ChatPersonDataBag
     {
         /// <summary>
-        /// Gets or sets a value indicating whether the chat is open direct message allowed.
+        /// Gets or sets the unique token used for authentication or session tracking in chat.
         /// </summary>
-        public bool IsChatOpenDirectMessageAllowed { get; set; }
+        public string Token { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the chat profile is public.
+        /// Gets or sets the unique identifier for the individual using the chat system.
         /// </summary>
-        public bool IsChatProfilePublic { get; set; }
+        public string UserId { get; set; }
     }
 }
