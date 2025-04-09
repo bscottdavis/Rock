@@ -31,10 +31,8 @@ export function RockChannelPreviewActionButtons<SCG extends ExtendableGenerics>(
 
     const toggleMute = async () => {
         if (isMuted) {
-            console.log('Unmuting channel...');
             await channel.unmute();
         } else {
-            console.log('Muting channel...');
             await channel.mute();
         }
 

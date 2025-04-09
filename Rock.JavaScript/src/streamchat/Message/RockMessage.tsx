@@ -146,7 +146,6 @@ const MessageSimpleWithContext = <
         }
 
         streamBadges = streamBadges.map((badge: any) => {
-            console.log(badge.Name)
             return (
                 <RockBadge
                     badgeText={badge.Name}

@@ -7,8 +7,8 @@ import {
     Thread,
     Window,
 } from "stream-chat-react";
-import { ChannelSort, StreamChat, ChannelFilters } from "stream-chat";
-
+import { ChannelSort, ChannelFilters } from "stream-chat";
+import { useCreateChatClient } from "stream-chat-react";
 import "stream-chat-react/dist/css/v2/index.css";
 import "./chatComponent.css";
 
@@ -17,7 +17,6 @@ import { RockChannelPreview } from "./ChannelPreview/RockChannelPreview";
 import { WrappedChannel } from "./MessageAction/RockMessageActionList";
 import { ChatConfigContext } from "./Chat/ChatConfigContext";
 import { SafeMessageInput } from "./MessageInput/safeMessageInput";
-
 /**
  * The ChatComponent sets up and renders the Stream Chat UI
  * including channel filtering, sorting, and context provisioning.
@@ -31,7 +30,16 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     sharedChannelTypeKey,
     directMessageChannelTypeKey,
 }) => {
-    const chatClient = StreamChat.getInstance(apiKey);
+
+    const chatClient = useCreateChatClient({
+        apiKey: apiKey,
+        tokenOrProvider: userToken,
+        userData: { id: userId },
+    });
+
+    if (!chatClient) {
+        return null;
+    }
 
     // Define base filters
     const userFilter: ChannelFilters = { members: { $in: [userId] } };
@@ -72,21 +80,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     const sort: ChannelSort = { last_message_at: -1 };
     const options = { limit: 20, messages_limit: 30 };
 
-    /**
-     * Connects the user on mount and disconnects on unmount.
-     */
-    useEffect(() => {
-        chatClient.connectUser(
-            { id: userId },
-            userToken
-        );
-
-        return () => {
-            chatClient.disconnectUser();
-        };
-    }, [chatClient, userId, userToken]);
-
-    const containerStyle: React.CSSProperties = {
+    const chatContentStyle: React.CSSProperties = {
         display: "flex",
         width: "100%",
         height: "100%",
@@ -99,7 +93,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
                     sharedChannelTypeKey,
                     directMessageChannelTypeKey,
                 }}>
-                <div style={containerStyle}>
+                <div style={chatContentStyle}>
                     <ChannelList
                         filters={finalFilter}
                         sort={sort}
