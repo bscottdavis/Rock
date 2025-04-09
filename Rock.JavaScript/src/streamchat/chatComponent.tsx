@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
     Chat,
     ChannelList,
@@ -16,7 +16,8 @@ import type { ChatComponentProps } from "./ChatComponentConfig";
 import { RockChannelPreview } from "./ChannelPreview/RockChannelPreview";
 import { WrappedChannel } from "./MessageAction/RockMessageActionList";
 import { ChatConfigContext } from "./Chat/ChatConfigContext";
-import { SafeMessageInput } from "./MessageInput/safeMessageInput";
+import { SafeMessageInput } from "./MessageInput/SafeMessageInput";
+
 /**
  * The ChatComponent sets up and renders the Stream Chat UI
  * including channel filtering, sorting, and context provisioning.

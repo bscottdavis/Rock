@@ -2,8 +2,6 @@ import React from 'react';
 import clsx from 'clsx';
 import { useMessageContext, useTranslationContext, useUserRole } from 'stream-chat-react';
 
-
-
 export const MessageBlocked = () => {
     const { message } = useMessageContext();
     const { t } = useTranslationContext('MessageBlocked');

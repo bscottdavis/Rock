@@ -1,11 +1,22 @@
-import React, { useRef, useEffect, useState } from 'react';
+/**
+ * RockChannelPreview Component
+ *
+ * Custom implementation of Stream's ChannelPreview component for Rock Chat.
+ * Displays a channel preview with avatar, name, unread count, mute status,
+ * and preview of the latest message. Also includes contextual channel action buttons.
+ *
+ * @template SCG - DefaultStreamChatGenerics
+ *
+ * @param {ChannelPreviewUIComponentProps<SCG>} props - Props provided by the Stream Chat library.
+ * @returns {JSX.Element} A channel preview component.
+ */
+import React, { useRef } from 'react';
 import clsx from 'clsx';
 import {
     ChannelPreviewUIComponentProps,
     DefaultStreamChatGenerics,
     DialogManagerProvider,
     useComponentContext,
-    useChatContext,
 } from 'stream-chat-react';
 import { Avatar as DefaultAvatar } from 'stream-chat-react';
 import { RockChannelPreviewActionButtons } from './RockChannelActionButtons';
@@ -30,7 +41,6 @@ const UnMemoizedChannelPreviewMessenger = <
         watchers,
     } = props;
 
-    const { client } = useChatContext<SCG>();
     const { ChannelPreviewActionButtons = RockChannelPreviewActionButtons } = useComponentContext<SCG>();
     const channelPreviewButton = useRef<HTMLButtonElement | null>(null);
     const isMuted = channel.muteStatus().muted;

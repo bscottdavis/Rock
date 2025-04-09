@@ -1,9 +1,20 @@
-import React, { useRef, useEffect, useState } from 'react';
-import clsx from 'clsx';
+/**
+ * RockChannelPreviewActionButtons Component
+ *
+ * Renders a set of contextual action buttons for a chat channel preview.
+ * Includes support for muting/unmuting, leaving, and hiding channels. Uses Stream's Dialog system for interaction.
+ *
+ * @template SCG - StreamChat ExtendableGenerics for typed support.
+ *
+ * @param {ChannelPreviewActionButtonsProps<SCG>} props
+ * @param {Channel<SCG>} props.channel - The Stream channel this preview belongs to.
+ *
+ * @returns {JSX.Element} Action buttons component for a channel preview.
+ */
+import React, { useRef } from 'react';
 import type { Channel, ExtendableGenerics } from 'stream-chat';
 import {
     useChatContext,
-    useChannelMembershipState,
     useTranslationContext,
     DialogAnchor,
     useDialog,
