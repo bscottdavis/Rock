@@ -3,7 +3,6 @@
            style="overflow: hidden;"
            panelBodyCssClass="overflow-hidden p-0">
         <RockForm style="height: 100%;">
-            <!-- Placeholder for the React component -->
             <div id="chat-container" class="rock-streamchat-embed"></div>
         </RockForm>
     </Block>
