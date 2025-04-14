@@ -2,10 +2,10 @@ import React from 'react';
 import { IconProps } from 'stream-chat-react/dist/types/types';
 
 /**
- * ActionsIcon Component
+ * ActionsIcon Component (Vertical)
  *
- * A compact SVG icon representing a three-dot menu (ellipsis), often used for
- * actions or overflow menus in UI components. Compatible with Stream's `IconProps`.
+ * A vertical ellipsis icon (⋮), often used for action menus in vertical layouts.
+ * Compatible with Stream's `IconProps`.
  *
  * @component
  * @example
@@ -13,18 +13,18 @@ import { IconProps } from 'stream-chat-react/dist/types/types';
  *
  * @param {string} [className] - Optional CSS class name to apply to the SVG element.
  *
- * @returns {JSX.Element} An SVG icon element representing a menu.
+ * @returns {JSX.Element} An SVG icon element representing a vertical menu.
  */
-export const ActionsIcon = ({ className = '' }: IconProps) => (
+export const VerticalEllipsisIcon = ({ className = '' }: IconProps) => (
     <svg
         className={className}
-        height="4"
-        viewBox="0 0 11 4"
-        width="11"
+        height="11"
+        width="4"
+        viewBox="0 0 4 11"
         xmlns="http://www.w3.org/2000/svg"
     >
         <path
-            d="M1.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+            d="M3 1.5A1.5 1.5 0 1 1 0 1.5 1.5 1.5 0 0 1 3 1.5zm0 4A1.5 1.5 0 1 1 0 5.5 1.5 1.5 0 0 1 3 5.5zm0 4A1.5 1.5 0 1 1 0 9.5 1.5 1.5 0 0 1 3 9.5z"
             fillRule="nonzero"
         />
     </svg>

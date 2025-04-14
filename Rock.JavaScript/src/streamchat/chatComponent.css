@@ -27,6 +27,11 @@
     --str-chat-primary-color: var(--color-primary);
     --str-chat-icon-color: var(--color-primary);
     --str-chat__message-send-color: var(--color-primary);
+
+    --str-chat__background-color: var(--color-interface-softest);
+    --str-chat__text-color: var(--color-interface-stronger);
+    --str-chat__spacing-0_5: 0rem;
+    --str-chat__text-low-emphasis-color: var(--color-interface-medium);
 }
 
 .str-chat__li--top .str-chat__message--other .str-chat__message-bubble,
@@ -68,4 +73,60 @@
 .rock-message-badges {
     display: flex;
     gap: 0.5rem;
+}
+
+.rock-channel-preview-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.str-chat__channel-preview-end-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.str-chat__channel-preview-text {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--str-chat__spacing-0_5);
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-preview-action-buttons-inline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+}
+
+.str-chat__channel-preview-container .str-chat__channel-preview__action-buttons {
+    right: auto;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1px;
+}
+
+.str-chat .str-chat__avatar--channel-preview,
+.str-chat .stream-chat__avatar--channel-preview {
+    --str-chat__avatar-size: calc(var(--str-chat__spacing-px) * 40)
+}
+
+.str-chat__channel-preview-messenger--last-message {
+    color: var(--color-interface-strong);
+}
+
+.str-chat__channel-header .str-chat__channel-header-end {
+    row-gap: var(--str-chat__spacing-1);
 }

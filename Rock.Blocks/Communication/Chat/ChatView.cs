@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Rock.Attribute;
 using Rock.ViewModels.Blocks.Communication.Chat.ChatView;
 using Rock.Web.Cache;
+using System;
 
 namespace Rock.Blocks.Communication.Chat
 {
@@ -28,6 +29,47 @@ namespace Rock.Blocks.Communication.Chat
         ControlType = Field.Types.BooleanFieldType.BooleanControlType.Checkbox,
         Order = 0 )]
 
+    [IntegerField( "Minimum Age",
+        Description = "The minimum age required to use chat. If the person does not have a birthdate, the verification template will show. Leave as empty to disable this check altogether.",
+        IsRequired = false,
+        Key = AttributeKey.MinimumAge,
+        Order = 1 )]
+
+    // Even though these settings are swapped between the mobile and web blocks,
+    // the order of the attributes should stay sequential to follow existing patterns.
+
+    [CodeEditorField( "Age Verification Template",
+        Description = "The XAML template displayed when the person does not have a birthdate.",
+        IsRequired = false,
+        Key = AttributeKey.MobileAgeVerificationTemplate,
+        SiteTypes = Enums.Cms.SiteTypeFlags.Mobile,
+        EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        Order = 2 )]
+
+    [CodeEditorField( "Age Restriction Template",
+        Description = "The XAML template displayed when the person is under the minimum age.",
+        IsRequired = false,
+        Key = AttributeKey.MobileAgeRestrictionTemplate,
+        SiteTypes = Enums.Cms.SiteTypeFlags.Mobile,
+        EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        Order = 3 )]
+
+    [CodeEditorField( "Age Verification Template",
+        Description = "The XAML template displayed when the person does not have a birthdate.",
+        IsRequired = false,
+        Key = AttributeKey.WebAgeVerificationTemplate,
+        SiteTypes = Enums.Cms.SiteTypeFlags.Web,
+        EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        Order = 4 )]
+
+    [CodeEditorField( "Age Restriction Template",
+        Description = "The XAML template displayed when the person is under the minimum age.",
+        IsRequired = false,
+        Key = AttributeKey.WebAgeRestrictionTemplate,
+        SiteTypes = Enums.Cms.SiteTypeFlags.Web,
+        EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        Order = 5 )]
+
     #endregion
 
     [Rock.SystemGuid.EntityTypeGuid( "B3D6F875-1589-4543-9E76-5C41201B465B" )]
@@ -40,6 +82,42 @@ namespace Rock.Blocks.Communication.Chat
         /// Gets the filter shared channels by campus setting.
         /// </summary>
         protected bool FilterSharedChannelsByCampus => GetAttributeValue( AttributeKey.FilterSharedChannelsByCampus ).AsBoolean();
+
+        /// <summary>
+        /// Returns the age verification template based on the current site type.
+        /// </summary>
+        protected string AgeVerificationTemplate
+        {
+            get
+            {
+                if ( RequestContext.IsSiteType( SiteType.Mobile ) )
+                {
+                    return GetAttributeValue( AttributeKey.MobileAgeVerificationTemplate );
+                }
+                else
+                {
+                    return GetAttributeValue( AttributeKey.WebAgeVerificationTemplate );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the age restriction template based on the current site type.
+        /// </summary>
+        protected string AgeRestrictionTemplate
+        {
+            get
+            {
+                if ( RequestContext.IsSiteType( SiteType.Mobile ) )
+                {
+                    return GetAttributeValue( AttributeKey.MobileAgeRestrictionTemplate );
+                }
+                else
+                {
+                    return GetAttributeValue( AttributeKey.WebAgeRestrictionTemplate );
+                }
+            }
+        }
 
         #endregion
 
@@ -54,6 +132,31 @@ namespace Rock.Blocks.Communication.Chat
             /// The filter shared channels by campus key.
             /// </summary>
             public const string FilterSharedChannelsByCampus = "FilterSharedChannelsByCampus";
+
+            /// <summary>
+            /// The minimum age key.
+            /// </summary>
+            public const string MinimumAge = "MinimumAge";
+
+            /// <summary>
+            /// The mobile age verification template key.
+            /// </summary>
+            public const string MobileAgeVerificationTemplate = "AgeVerificationTemplate";
+
+            /// <summary>
+            /// The mobile age restriction template key.
+            /// </summary>
+            public const string MobileAgeRestrictionTemplate = "AgeRestrictionTemplate";
+
+            /// <summary>
+            /// The web age verification template key.
+            /// </summary>
+            public const string WebAgeVerificationTemplate = "WebAgeVerificationTemplate";
+
+            /// <summary>
+            /// The web age restriction template key.
+            /// </summary>
+            public const string WebAgeRestrictionTemplate = "WebAgeRestrictionTemplate";
         }
 
         #endregion
@@ -63,7 +166,7 @@ namespace Rock.Blocks.Communication.Chat
         /// <inheritdoc />
         public override object GetObsidianBlockInitialization()
         {
-            if( !ChatHelper.IsChatEnabled )
+            if ( !ChatHelper.IsChatEnabled )
             {
                 return null;
             }
@@ -173,26 +276,87 @@ namespace Rock.Blocks.Communication.Chat
         {
             if ( !ChatHelper.IsChatEnabled )
             {
-                return ActionBadRequest( "Chat is not configured.");
-            }
-
-            if ( RequestContext.CurrentPerson == null )
-            {
-                return ActionUnauthorized( "You must be logged in to view chat." );
+                return ActionBadRequest( "Chat is not configured." );
             }
 
             var person = RequestContext.CurrentPerson;
 
+            if ( person == null )
+            {
+                return ActionUnauthorized( "You must be logged in to view chat." );
+            }
+
+            // Check if age verification is required.
+            var minimumAge = GetAttributeValue( AttributeKey.MinimumAge ).AsIntegerOrNull();
+
+            if ( minimumAge.HasValue && minimumAge > 0 )
+            {
+                var age = person.Age;
+                if ( age == null )
+                {
+                    var mergeFields = RequestContext.GetCommonMergeFields();
+                    mergeFields.Add( "MinimumAge", minimumAge.Value );
+
+                    return ActionOk( new ChatPersonDataBag
+                    {
+                        IsAgeVerificationRequired = true,
+                        HasFailedAgeVerification = false,
+                        AgeVerificationTemplate = AgeVerificationTemplate.ResolveMergeFields( mergeFields ),
+                    } );
+                }
+
+                if ( age < minimumAge )
+                {
+                    var mergeFields = RequestContext.GetCommonMergeFields();
+                    mergeFields.Add( "MinimumAge", minimumAge.Value );
+
+                    return ActionOk( new ChatPersonDataBag
+                    {
+                        IsAgeVerificationRequired = false,
+                        HasFailedAgeVerification = true,
+                        AgeRestrictionTemplate = AgeRestrictionTemplate.ResolveMergeFields( mergeFields ),
+                    } );
+                }
+            }
+
             using ( var chatHelper = new ChatHelper() )
             {
+                if ( chatHelper.IsPersonBanned( person.Id ) )
+                {
+                    return ActionForbidden( "You are banned from using chat." );
+                }
+
                 var chatUserAuth = await chatHelper.GetChatUserAuthenticationAsync( person.Id, true );
 
                 return ActionOk( new ChatPersonDataBag
                 {
                     Token = chatUserAuth.Token,
-                    UserId = chatUserAuth.ChatUserKey
+                    UserId = chatUserAuth.ChatUserKey,
+                    IsAgeVerificationRequired = false,
+                    HasFailedAgeVerification = false,
+                    AgeRestrictionTemplate = string.Empty,
+                    AgeVerificationTemplate = string.Empty
                 } );
             }
+        }
+
+        /// <summary>
+        /// Updates the individual's birth date.
+        /// </summary>
+        /// <param name="birthDate">The birthdate to update.</param>
+        /// <returns>A result depicting the operation's success.</returns>
+        [BlockAction]
+        public BlockActionResult UpdatePersonBirthDate( DateTime birthDate )
+        {
+            var currentPerson = RequestContext.CurrentPerson;
+            if ( currentPerson == null )
+            {
+                return ActionUnauthorized( "You must be logged in to update your birth date." );
+            }
+
+            currentPerson.SetBirthDate( birthDate );
+            RockContext.SaveChanges();
+            return ActionOk();
         }
 
         #endregion

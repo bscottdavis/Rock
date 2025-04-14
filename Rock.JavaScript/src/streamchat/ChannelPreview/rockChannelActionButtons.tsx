@@ -19,9 +19,9 @@ import {
     DialogAnchor,
     useDialog,
     useDialogIsOpen,
-    ActionsIcon,
 } from 'stream-chat-react';
 import 'stream-chat-react/dist/css/v2/index.css';
+import { VerticalEllipsisIcon } from './Icons';
 
 export type ChannelPreviewActionButtonsProps<SCG extends ExtendableGenerics> = {
     channel: Channel<SCG>;
@@ -120,7 +120,7 @@ export function RockChannelPreviewActionButtons<SCG extends ExtendableGenerics>(
                 ref={buttonRef}
                 aria-expanded={dialogIsOpen}
                 aria-haspopup='true'>
-                <ActionsIcon className='str-chat__channel-preview__action-button-icon' />
+                <VerticalEllipsisIcon className='str-chat__channel-preview__action-button-icon' />
             </button>
         </div>
     );

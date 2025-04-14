@@ -217,12 +217,9 @@ const MessageSimpleWithContext = <
                             })}
                             data-testid='message-inner'
                             onClick={handleClick}
-                            onKeyUp={handleClick}
-                        >
+                            onKeyUp={handleClick}>
                             <MessageActions />
-                            <div className='str-chat__message-reactions-host'>
-                                {hasReactions && <ReactionsList reverse />}
-                            </div>
+
                             <div className='str-chat__message-bubble'>
                                 {poll && <Poll poll={poll} />}
                                 {message.attachments?.length && !message.quoted_message ? (
@@ -252,21 +249,25 @@ const MessageSimpleWithContext = <
                                 reply_count={message.reply_count}
                             />
                         )}
-                        {showMetadata && (
-                            <div className='str-chat__message-metadata'>
-                                <MessageStatus />
 
-                                <MessageTimestamp customClass='str-chat__message-simple-timestamp' />
-                                {isEdited && (
-                                    <span className='str-chat__mesage-simple-edited'>
-                                        {t<string>('Edited')}
-                                    </span>
-                                )}
-                                {isEdited && (
-                                    <MessageEditedTimestamp calendar open={isEditedTimestampOpen} />
-                                )}
-                            </div>
-                        )}
+                        <div className="rock-messsage-footer">
+                            {showMetadata && (
+                                <div className='str-chat__message-metadata'>
+                                    <MessageStatus />
+
+                                    <MessageTimestamp customClass='str-chat__message-simple-timestamp' />
+                                    {isEdited && (
+                                        <span className='str-chat__mesage-simple-edited'>
+                                            {t<string>('Edited')}
+                                        </span>
+                                    )}
+                                    {isEdited && (
+                                        <MessageEditedTimestamp calendar open={isEditedTimestampOpen} />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                 </div>
             }

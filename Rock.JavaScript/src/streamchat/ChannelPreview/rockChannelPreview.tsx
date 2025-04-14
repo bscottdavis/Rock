@@ -1,30 +1,19 @@
-/**
- * RockChannelPreview Component
- *
- * Custom implementation of Stream's ChannelPreview component for Rock Chat.
- * Displays a channel preview with avatar, name, unread count, mute status,
- * and preview of the latest message. Also includes contextual channel action buttons.
- *
- * @template SCG - DefaultStreamChatGenerics
- *
- * @param {ChannelPreviewUIComponentProps<SCG>} props - Props provided by the Stream Chat library.
- * @returns {JSX.Element} A channel preview component.
- */
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import clsx from 'clsx';
 import {
     ChannelPreviewUIComponentProps,
     DefaultStreamChatGenerics,
     DialogManagerProvider,
     useComponentContext,
+    useDialogIsOpen,
 } from 'stream-chat-react';
 import { Avatar as DefaultAvatar } from 'stream-chat-react';
 import { RockChannelPreviewActionButtons } from './RockChannelActionButtons';
 
-const UnMemoizedChannelPreviewMessenger = <
+const ChannelPreviewContent = <
     SCG extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
 >(
-    props: ChannelPreviewUIComponentProps<SCG>,
+    props: ChannelPreviewUIComponentProps<SCG>
 ) => {
     const {
         active,
@@ -41,12 +30,18 @@ const UnMemoizedChannelPreviewMessenger = <
         watchers,
     } = props;
 
-    const { ChannelPreviewActionButtons = RockChannelPreviewActionButtons } = useComponentContext<SCG>();
+    const { ChannelPreviewActionButtons = RockChannelPreviewActionButtons } =
+        useComponentContext<SCG>();
+
     const channelPreviewButton = useRef<HTMLButtonElement | null>(null);
     const isMuted = channel.muteStatus().muted;
-
     const avatarName =
         displayTitle || channel?.state?.messages?.at(-1)?.user?.id;
+
+    const [isHovered, setIsHovered] = useState(false);
+    const dialogId = `channel-actions-${channel.id}`;
+    const isDialogOpen = useDialogIsOpen(dialogId);
+    const showActions = isHovered || isDialogOpen;
 
     const onSelectChannel = (e: React.MouseEvent<HTMLButtonElement>) => {
         if (customOnSelectChannel) {
@@ -58,12 +53,17 @@ const UnMemoizedChannelPreviewMessenger = <
     };
 
     return (
-        <DialogManagerProvider>
-            <div className='str-chat__channel-preview-container'>
-                {channel && <ChannelPreviewActionButtons channel={channel} />}
+        <div
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="str-chat__channel-preview-container">
+            <div className="rock-channel-preview-container">
                 <button
                     aria-label={`Select Channel: ${displayTitle || ''}`}
                     aria-selected={active}
+                    data-testid="channel-preview-button"
+                    onClick={onSelectChannel}
+                    ref={channelPreviewButton}
                     className={clsx(
                         'str-chat__channel-preview-messenger str-chat__channel-preview',
                         active && 'str-chat__channel-preview-messenger--active',
@@ -71,46 +71,61 @@ const UnMemoizedChannelPreviewMessenger = <
                         isMuted && 'str-chat__channel-preview--muted',
                         customClassName,
                     )}
-                    data-testid='channel-preview-button'
-                    onClick={onSelectChannel}
-                    ref={channelPreviewButton}
-                    role='option'
-                >
+                    role='option'>
                     <div className='str-chat__channel-preview-messenger--left'>
                         <Avatar
-                            className='str-chat__avatar--channel-preview'
+                            className="str-chat__avatar--channel-preview"
                             groupChannelDisplayInfo={groupChannelDisplayInfo}
                             image={displayImage}
                             name={avatarName}
                         />
                     </div>
-                    <div className='str-chat__channel-preview-end'>
-                        <div className='str-chat__channel-preview-end-first-row'>
-                            <div className='str-chat__channel-preview-messenger--name'>
-                                <span>
-                                    {displayTitle}
-                                    {isMuted && <span title="Muted"> 🔇</span>}
-                                </span>
-                            </div>
-                            {!!unread && (
-                                <div
-                                    className='str-chat__channel-preview-unread-badge'
-                                    data-testid='unread-badge'
-                                >
-                                    {unread}
+
+                    <div className="str-chat__channel-preview-end-row">
+                        <div className="str-chat__channel-preview-text">
+                            <div className="str-chat__channel-preview-end-first-row">
+                                <div className="str-chat__channel-preview-messenger--name">
+                                    <span>
+                                        {displayTitle}
+                                        {isMuted && <span title="Muted"> 🔇</span>}
+                                    </span>
                                 </div>
-                            )}
+                                {!!unread && (
+                                    <div className="str-chat__channel-preview-unread-badge">
+                                        {unread}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="str-chat__channel-preview-messenger--last-message">
+                                {isMuted ? (
+                                    <span title="Muted">Channel is muted</span>
+                                ) : (
+                                    <span>{latestMessagePreview}</span>
+                                )}
+                            </div>
                         </div>
-                        <div className='str-chat__channel-preview-messenger--last-message'>
-                            {isMuted && <span title="Muted">Channel is muted</span>}
-                            {!isMuted && <span>{latestMessagePreview}</span>}
-                        </div>
+
+                        {showActions && (
+                            <div className="channel-preview-action-buttons-inline">
+                                <ChannelPreviewActionButtons channel={channel} />
+                            </div>
+                        )}
                     </div>
                 </button>
             </div>
-        </DialogManagerProvider>
+        </div>
     );
 };
+
+const UnMemoizedChannelPreviewMessenger = <
+    SCG extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
+>(
+    props: ChannelPreviewUIComponentProps<SCG>
+) => (
+    <DialogManagerProvider>
+        <ChannelPreviewContent {...props} />
+    </DialogManagerProvider>
+);
 
 export const RockChannelPreview = React.memo(
     UnMemoizedChannelPreviewMessenger,

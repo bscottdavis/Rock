@@ -6,6 +6,7 @@ import {
     MessageList,
     Thread,
     Window,
+    DialogManagerProvider,
 } from "stream-chat-react";
 import { ChannelSort, ChannelFilters } from "stream-chat";
 import { useCreateChatClient } from "stream-chat-react";

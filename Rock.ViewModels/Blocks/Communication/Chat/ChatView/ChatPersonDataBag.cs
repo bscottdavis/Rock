@@ -30,5 +30,25 @@ namespace Rock.ViewModels.Blocks.Communication.Chat.ChatView
         /// Gets or sets the unique identifier for the individual using the chat system.
         /// </summary>
         public string UserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the individual is required to complete age verification before using chat features.
+        /// </summary>
+        public bool IsAgeVerificationRequired { get; set; }
+
+        /// <summary>
+        /// Gets or sets the template used for age verification.
+        /// </summary>
+        public string AgeVerificationTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the individual failed the age verification check.
+        /// </summary>
+        public bool HasFailedAgeVerification { get; set; }
+
+        /// <summary>
+        /// Gets or sets the template used for displaying age restriction messages.
+        /// </summary>
+        public string AgeRestrictionTemplate { get; set; }
     }
 }
