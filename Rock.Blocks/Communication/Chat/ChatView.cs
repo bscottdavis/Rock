@@ -44,6 +44,7 @@ namespace Rock.Blocks.Communication.Chat
         Key = AttributeKey.MobileAgeVerificationTemplate,
         SiteTypes = Enums.Cms.SiteTypeFlags.Mobile,
         EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        DefaultValue = _defaultMobileAgeVerificationTemplate,
         Order = 2 )]
 
     [CodeEditorField( "Age Restriction Template",
@@ -52,6 +53,7 @@ namespace Rock.Blocks.Communication.Chat
         Key = AttributeKey.MobileAgeRestrictionTemplate,
         SiteTypes = Enums.Cms.SiteTypeFlags.Mobile,
         EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        DefaultValue = _defaultMobileAgeRestrictionTemplate,
         Order = 3 )]
 
     [CodeEditorField( "Age Verification Template",
@@ -358,6 +360,56 @@ namespace Rock.Blocks.Communication.Chat
             RockContext.SaveChanges();
             return ActionOk();
         }
+
+        #endregion
+
+        #region Default Templates
+
+        private const string _defaultMobileAgeVerificationTemplate = @"<StackLayout StyleClass=""spacing-24, p-16"">
+    <Rock:StyledBorder HorizontalOptions=""Center""
+        StyleClass=""border-info-strong""
+        BorderWidth=""4""
+        CornerRadius=""70""
+        HeightRequest=""140""
+        WidthRequest=""140"">
+        <Rock:Icon IconClass=""fa fa-shield-alt"" 
+            FontSize=""84""
+            HorizontalOptions=""Center""
+            VerticalOptions=""Center""
+            StyleClass=""text-info-strong"" />
+    </Rock:StyledBorder>
+
+    <StackLayout>
+        <Label StyleClass=""title1, bold, text-interface-strongest"" 
+            Text=""Let’s Verify Your Age"" />
+    
+        <Label StyleClass=""body, text-interface-stronger""
+            Text=""The chat feature is only available to individuals above a certain age. Please confirm your birthdate to proceed."" />
+    </StackLayout>
+</StackLayout>";
+
+        private const string _defaultMobileAgeRestrictionTemplate = @"<StackLayout StyleClass=""spacing-24, p-16"">
+    <Rock:StyledBorder HorizontalOptions=""Center""
+        StyleClass=""border-warning-strong""
+        BorderWidth=""4""
+        CornerRadius=""999""
+        HeightRequest=""140""
+        WidthRequest=""140"">
+        <Rock:Icon IconClass=""fa fa-user-lock"" 
+            FontSize=""72""
+            StyleClass=""text-warning-strong""
+            HorizontalOptions=""Center""
+            VerticalOptions=""Center"" />
+    </Rock:StyledBorder>
+
+    <StackLayout>
+        <Label StyleClass=""title1, bold, text-interface-strongest"" 
+            Text=""Chat Unavailable"" />
+    
+        <Label StyleClass=""body, text-interface-stronger""
+            Text=""We're sorry, but this feature is only available to individuals who are {{ MinimumAge }} years or older."" />
+    </StackLayout>
+</StackLayout>";
 
         #endregion
     }

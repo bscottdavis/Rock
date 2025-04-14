@@ -23,6 +23,18 @@
 
 /** Represents a data container for a person's chat-related identification information. */
 export type ChatPersonDataBag = {
+    /** Gets or sets the template used for displaying age restriction messages. */
+    ageRestrictionTemplate?: string | null;
+
+    /** Gets or sets the template used for age verification. */
+    ageVerificationTemplate?: string | null;
+
+    /** Gets or sets a value indicating whether the individual failed the age verification check. */
+    hasFailedAgeVerification: boolean;
+
+    /** Gets or sets a value indicating whether the individual is required to complete age verification before using chat features. */
+    isAgeVerificationRequired: boolean;
+
     /** Gets or sets the unique token used for authentication or session tracking in chat. */
     token?: string | null;
 
