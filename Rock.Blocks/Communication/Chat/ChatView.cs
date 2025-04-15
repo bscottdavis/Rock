@@ -365,6 +365,9 @@ namespace Rock.Blocks.Communication.Chat
 
         #region Default Templates
 
+        /// <summary>
+        /// The default template do display when age verification is required.
+        /// </summary>
         private const string _defaultMobileAgeVerificationTemplate = @"<StackLayout StyleClass=""spacing-24, p-16"">
     <Rock:StyledBorder HorizontalOptions=""Center""
         StyleClass=""border-info-strong""
@@ -388,6 +391,9 @@ namespace Rock.Blocks.Communication.Chat
     </StackLayout>
 </StackLayout>";
 
+        /// <summary>
+        /// The default template to display when the person is under the minimum age.
+        /// </summary>
         private const string _defaultMobileAgeRestrictionTemplate = @"<StackLayout StyleClass=""spacing-24, p-16"">
     <Rock:StyledBorder HorizontalOptions=""Center""
         StyleClass=""border-warning-strong""
