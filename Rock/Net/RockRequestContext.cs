@@ -1023,7 +1023,7 @@ namespace Rock.Net
         /// <returns><c>true</c> if the type matches, <c>false</c> otherwise.</returns>
         public bool IsSiteType( SiteType siteType )
         {
-            return _siteCache?.SiteType == siteType;
+            return GetSiteType() == siteType;
         }
 
         #endregion
