@@ -250,7 +250,7 @@ const MessageSimpleWithContext = <
                             />
                         )}
 
-                        <div className="rock-messsage-footer">
+                        <div className="rock-message-footer">
                             {showMetadata && (
                                 <div className='str-chat__message-metadata'>
                                     <MessageStatus />

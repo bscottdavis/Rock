@@ -8,6 +8,7 @@ using Rock.Attribute;
 using Rock.ViewModels.Blocks.Communication.Chat.ChatView;
 using Rock.Web.Cache;
 using System;
+using Rock.ViewModels.Controls;
 
 namespace Rock.Blocks.Communication.Chat
 {
@@ -22,6 +23,8 @@ namespace Rock.Blocks.Communication.Chat
 
     #region Block Attributes
 
+    #region Shared
+
     [BooleanField( "Filter Shared Channels by Campus",
         Description = "Only show channels that match the individual's campus or have no campus set.",
         DefaultBooleanValue = false,
@@ -34,6 +37,10 @@ namespace Rock.Blocks.Communication.Chat
         IsRequired = false,
         Key = AttributeKey.MinimumAge,
         Order = 1 )]
+
+    #endregion
+
+    #region Mobile-Specific
 
     // Even though these settings are swapped between the mobile and web blocks,
     // the order of the attributes should stay sequential to follow existing patterns.
@@ -56,12 +63,17 @@ namespace Rock.Blocks.Communication.Chat
         DefaultValue = _defaultMobileAgeRestrictionTemplate,
         Order = 3 )]
 
+    #endregion
+
+    #region Web-Specific
+
     [CodeEditorField( "Age Verification Template",
         Description = "The XAML template displayed when the person does not have a birthdate.",
         IsRequired = false,
         Key = AttributeKey.WebAgeVerificationTemplate,
         SiteTypes = Enums.Cms.SiteTypeFlags.Web,
         EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        DefaultValue = _defaultWebAgeVerificationTemplate,
         Order = 4 )]
 
     [CodeEditorField( "Age Restriction Template",
@@ -70,7 +82,10 @@ namespace Rock.Blocks.Communication.Chat
         Key = AttributeKey.WebAgeRestrictionTemplate,
         SiteTypes = Enums.Cms.SiteTypeFlags.Web,
         EditorMode = Web.UI.Controls.CodeEditorMode.Lava,
+        DefaultValue = _defaultWebAgeRestrictionTemplate,
         Order = 5 )]
+
+    #endregion
 
     #endregion
 
@@ -348,7 +363,7 @@ namespace Rock.Blocks.Communication.Chat
         /// <param name="birthDate">The birthdate to update.</param>
         /// <returns>A result depicting the operation's success.</returns>
         [BlockAction]
-        public BlockActionResult UpdatePersonBirthDate( DateTime birthDate )
+        public BlockActionResult UpdatePersonBirthDate( DatePartsPickerValueBag birthDate )
         {
             var currentPerson = RequestContext.CurrentPerson;
             if ( currentPerson == null )
@@ -356,7 +371,8 @@ namespace Rock.Blocks.Communication.Chat
                 return ActionUnauthorized( "You must be logged in to update your birth date." );
             }
 
-            currentPerson.SetBirthDate( birthDate );
+            var birthDateTime = new DateTime( birthDate.Year, birthDate.Month, birthDate.Day );
+            currentPerson.SetBirthDate( birthDateTime );
             RockContext.SaveChanges();
             return ActionOk();
         }
@@ -366,7 +382,7 @@ namespace Rock.Blocks.Communication.Chat
         #region Default Templates
 
         /// <summary>
-        /// The default template do display when age verification is required.
+        /// The default template to display when age verification is required.
         /// </summary>
         private const string _defaultMobileAgeVerificationTemplate = @"<StackLayout StyleClass=""spacing-24, p-16"">
     <Rock:StyledBorder HorizontalOptions=""Center""
@@ -416,6 +432,44 @@ namespace Rock.Blocks.Communication.Chat
             Text=""We're sorry, but this feature is only available to individuals who are {{ MinimumAge }} years or older."" />
     </StackLayout>
 </StackLayout>";
+
+        /// <summary>
+        /// The default template to display when age verification is required on web.
+        /// </summary>
+        private const string _defaultWebAgeVerificationTemplate = @"<!-- Age Verification Prompt -->
+<div class=""age-verification-wrapper"" style=""text-align: center; padding: 1.5rem;"">
+  <!-- Font Awesome shield icon -->
+  <div class=""icon"" style=""margin-bottom: 1.5rem;"">
+    <i class=""fas fa-shield-alt"" style=""font-size: 4rem; color: var(--color-info-strong);""></i>
+  </div>
+  
+  <h2 style=""color: var(--color-interface-strongest)"">
+      Let's Verify Your Age
+  </h2>
+  <!-- Instructional text -->
+  <p style=""font-size: 1rem; max-width: 400px; margin: 0 auto; color: var(--color-interface-strong);"">
+    The chat feature is only available to individuals above a certain age. Please confirm your birthdate to proceed.
+  </p>
+</div>";
+
+        /// <summary>
+        /// The default template to display when the person is under the minimum age on web.
+        /// </summary>
+        private const string _defaultWebAgeRestrictionTemplate = @"<!-- Age Verification Prompt -->
+<div class=""age-verification-wrapper"" style=""text-align: center; padding: 1.5rem;"">
+  <!-- Font Awesome shield icon -->
+  <div class=""icon"" style=""margin-bottom: 1.5rem;"">
+    <i class=""fas fa-user-lock"" style=""font-size: 4rem; color: var(--color-warning-strong);""></i>
+  </div>
+  
+  <h2 style=""color: var(--color-interface-strongest)"">
+      Chat Unavailable
+  </h2>
+  <!-- Instructional text -->
+  <p style=""font-size: 1rem; max-width: 400px; margin: 0 auto; color: var(--color-interface-strong);"">
+    We're sorry, but this feature is only available to individuals who are {{ MinimumAge }} years or older.
+  </p>
+</div>";
 
         #endregion
     }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     Chat,
     ChannelList,
@@ -18,6 +18,9 @@ import { RockChannelPreview } from "./ChannelPreview/RockChannelPreview";
 import { WrappedChannel } from "./MessageAction/RockMessageActionList";
 import { ChatConfigContext } from "./Chat/ChatConfigContext";
 import { SafeMessageInput } from "./MessageInput/SafeMessageInput";
+import ChannelListHeader from "./ChannelListHeader/ChannelListHeader";
+import CreateChannelModal from "./CreateChannel/CreateChannelModal";
+import { RockChannelHeader } from "./ChannelHeader/RockChannelHeader";
 
 /**
  * The ChatComponent sets up and renders the Stream Chat UI
@@ -32,6 +35,13 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     sharedChannelTypeKey,
     directMessageChannelTypeKey,
 }) => {
+
+    const [showModal, setShowModal] = useState(false);
+    const handleNewMessage = () => setShowModal(true);
+    const handleCloseModal = () => setShowModal(false);
+    const handleCreateChannel = async (userIds: string[]) => {
+
+    };
 
     const chatClient = useCreateChatClient({
         apiKey: apiKey,
@@ -96,20 +106,31 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
                     directMessageChannelTypeKey,
                 }}>
                 <div style={chatContentStyle}>
-                    <ChannelList
-                        filters={finalFilter}
-                        sort={sort}
-                        options={options}
-                        Preview={RockChannelPreview}
-                    />
+                    <div className="rock__channel-list-container">
+                        <ChannelListHeader onNewMessage={handleNewMessage} />
+                        <ChannelList
+                            filters={finalFilter}
+                            sort={sort}
+                            options={options}
+                            Preview={RockChannelPreview}
+                        />
+                    </div>
+
                     <WrappedChannel>
                         <Window>
-                            <ChannelHeader />
+                            <RockChannelHeader />
                             <MessageList noGroupByUser />
                             <SafeMessageInput />
                         </Window>
                         <Thread />
                     </WrappedChannel>
+
+                    {/* Create DM modal */}
+                    {showModal && (
+                        <CreateChannelModal
+                            onClose={handleCloseModal}
+                        />
+                    )}
                 </div>
             </ChatConfigContext.Provider>
         </Chat>

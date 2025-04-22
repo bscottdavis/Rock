@@ -4,12 +4,14 @@ import {
     ChannelPreviewUIComponentProps,
     DefaultStreamChatGenerics,
     DialogManagerProvider,
+    useChatContext,
     useComponentContext,
     useDialogIsOpen,
 } from 'stream-chat-react';
 import { Avatar as DefaultAvatar } from 'stream-chat-react';
 import { RockChannelPreviewActionButtons } from './RockChannelActionButtons';
-
+import { DefaultChatChannelNamer } from '../ChannelNamer/DefaultChannelNamer';
+import { useChatConfig } from '../Chat/ChatConfigContext';
 const ChannelPreviewContent = <
     SCG extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
 >(
@@ -33,10 +35,19 @@ const ChannelPreviewContent = <
     const { ChannelPreviewActionButtons = RockChannelPreviewActionButtons } =
         useComponentContext<SCG>();
 
+    const chatConfig = useChatConfig();
     const channelPreviewButton = useRef<HTMLButtonElement | null>(null);
     const isMuted = channel.muteStatus().muted;
-    const avatarName =
-        displayTitle || channel?.state?.messages?.at(-1)?.user?.id;
+
+    const { client } = useChatContext();
+    const currentUserId = client.userID;
+
+    // compute title using DefaultChatChannelNamer if displayTitle is empty
+    const title =
+        displayTitle ?? DefaultChatChannelNamer(channel, chatConfig.directMessageChannelTypeKey!, currentUserId);
+
+    // use title for avatar fallback
+    const avatarName = title || channel.state.messages?.at(-1)?.user?.id;
 
     const [isHovered, setIsHovered] = useState(false);
     const dialogId = `channel-actions-${channel.id}`;
@@ -86,7 +97,7 @@ const ChannelPreviewContent = <
                             <div className="str-chat__channel-preview-end-first-row">
                                 <div className="str-chat__channel-preview-messenger--name">
                                     <span>
-                                        {displayTitle}
+                                        {title}
                                         {isMuted && <span title="Muted"> 🔇</span>}
                                     </span>
                                 </div>
