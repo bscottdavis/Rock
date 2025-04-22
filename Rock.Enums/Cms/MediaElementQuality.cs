@@ -25,9 +25,10 @@ namespace Rock.Media
     /// <remarks>
     /// <para>When deciding on which file to play by default the order is as follows:</para>
     /// <para>HLS, UltraHD, HD, SD, Embed, Other.</para>
-    /// <para>In each quality, the results will be further sorted by <see cref="MediaElementFileData.Width" />
+    /// <para>In each quality, the results will be further sorted by see MediaElementFileData.Width
     /// in descending order.</para>
     /// </remarks>
+     [Enums.EnumDomain( "Cms" )]
     public enum MediaElementQuality
     {
         /// <summary>
@@ -49,19 +50,19 @@ namespace Rock.Media
         /// <summary>
         /// Standard Definition video is defined as below 720p.
         /// </summary>
-        [Description( "Standard Definition" )]
+        [Description("Standard Definition")]
         SD,
 
         /// <summary>
         /// High Definition video is defined as 720p or higher.
         /// </summary>
-        [Description( "High Definition" )]
+        [Description("High Definition")]
         HD,
 
         /// <summary>
         /// Ultra High Definition video is defined as 4K or higher.
         /// </summary>
-        [Description( "Ultra High Definition" )]
+        [Description("Ultra High Definition")]
         UltraHD,
 
         /// <summary>
