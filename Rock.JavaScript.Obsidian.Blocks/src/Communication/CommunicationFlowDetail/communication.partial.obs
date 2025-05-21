@@ -1,0 +1,156 @@
+<template>
+    <div class="communication-time-trigger">
+        <Line v-if="internalOrder" />
+        <CommunicationTrigger v-model:daysToWait="internalDaysToWait"
+                              v-model:timeToSend="internalTimeToSend"
+                              :disabled="disabled" />
+
+        <Line v-if="!internalOrder" />
+        <DownArrow v-else />
+    </div>
+
+    <CommunicationItem v-model:order="internalOrder"
+                       :communicationCount="communicationCount"
+                       :communicationType="communication.communicationType"
+                       :disabled="disabled"
+                       :from="from"
+                       :name="communication.name ?? ''"
+                       :preview="preview"
+                       @delete="$emit('delete')"
+                       @edit="$emit('edit')"
+                       @moveDown="$emit('moveDown')"
+                       @moveUp="$emit('moveUp')" />
+
+    <div v-if="internalOrder === communicationCount - 1" class="d-flex flex-column align-items-center">
+        <DownArrow />
+    </div>
+</template>
+
+<style scoped>
+.communication-time-trigger {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script setup lang="ts">
+    import { computed, PropType } from "vue";
+    import CommunicationItem from "./communicationItem.partial.obs";
+    import CommunicationTrigger from "./communicationTrigger.partial.obs";
+    import DownArrow from "./downArrow.partial.obs";
+    import Line from "./line.partial.obs";
+    import { getPreheaderTextFromDoc } from "./utils.partial";
+    import { CommunicationType } from "@Obsidian/Enums/Communication/communicationType";
+    import { useVModelPassthrough } from "@Obsidian/Utility/component";
+    import { CommunicationFlowCommunicationBag } from "@Obsidian/ViewModels/Blocks/Communication/CommunicationFlowDetail/communicationFlowCommunicationBag";
+
+    const props = defineProps({
+        communication: {
+            type: Object as PropType<CommunicationFlowCommunicationBag>,
+            required: true
+        },
+
+        communicationCount: {
+            type: Number as PropType<number>,
+            required: true
+        },
+
+        disabled: {
+            type: Boolean as PropType<boolean>,
+            required: true
+        }
+    });
+
+    const emit = defineEmits<{
+        (e: "delete"): void;
+        (e: "edit"): void;
+        (e: "moveDown"): void;
+        (e: "moveUp"): void;
+        (e: "update:communication", value: CommunicationFlowCommunicationBag): void;
+    }>();
+
+    // #region Values
+
+    const internalCommunication = useVModelPassthrough(props, "communication", emit);
+
+    // #endregion Values
+
+    // #region Computed Values
+
+    const internalDaysToWait = computed<number>({
+        get() {
+            return internalCommunication.value.daysToWait ?? 0;
+        },
+        set(value: number) {
+            internalCommunication.value = {
+                ...internalCommunication.value,
+                daysToWait: value
+            };
+        }
+    });
+
+    const internalOrder = computed<number>({
+        get() {
+            return internalCommunication.value.order ?? 0;
+        },
+        set(value: number) {
+            internalCommunication.value = {
+                ...internalCommunication.value,
+                order: value
+            };
+        }
+    });
+
+    const internalTimeToSend = computed<string>({
+        get() {
+            return internalCommunication.value.timeToSend ?? "";
+        },
+        set(value: string) {
+            internalCommunication.value = {
+                ...internalCommunication.value,
+                timeToSend: value
+            };
+        }
+    });
+
+    const from = computed<string>(() => {
+        switch (internalCommunication.value.communicationType) {
+            case CommunicationType.Email:
+                return internalCommunication.value.communicationTemplate?.fromEmail ?? "";
+            case CommunicationType.SMS:
+                return internalCommunication.value.communicationTemplate?.smsFromSystemPhoneNumber?.text ?? "";
+            case CommunicationType.PushNotification:
+                return internalCommunication.value.communicationTemplate?.pushMobileApplication?.text ?? "All Applications";
+            default:
+                return "";
+        }
+    });
+
+    const preview = computed<string>(() => {
+        switch (internalCommunication.value.communicationType) {
+            case CommunicationType.Email:
+                return getEmailPreviewText(internalCommunication.value.communicationTemplate?.message ?? "");
+            case CommunicationType.SMS:
+                return internalCommunication.value.communicationTemplate?.smsMessage ?? "";
+            case CommunicationType.PushNotification:
+                return internalCommunication.value.communicationTemplate?.pushMessage ?? "";
+            default:
+                return "";
+        }
+    });
+
+    // #endregion Computed Values
+
+    // #region Functions
+
+    function getEmailPreviewText(message: string): string {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(message, "text/html");
+        const preheaderText = getPreheaderTextFromDoc(doc);
+        return preheaderText ?? "";
+    }
+
+    // #endregion Functions
+</script>

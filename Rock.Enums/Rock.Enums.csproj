@@ -54,11 +54,9 @@
     <Compile Include="Cms\LavaEndpointSecurityMode.cs" />
     <Compile Include="Communication\Chat\ChatNotificationMode.cs" />
     <Compile Include="Communication\CommunicationType.cs" />
-    <Compile Include="Blocks\Communication\CommunicationEntryWizard\PushOpenAction.cs" />
     <Compile Include="Blocks\Communication\CommunicationEntry\Mode.cs" />
     <Compile Include="Blocks\Communication\CommunicationEntry\MediumType.cs" />
-    <Compile Include="Blocks\Communication\CommunicationEntry\PushOpenActionType.cs" />
-    <Compile Include="Blocks\Communication\CommunicationTemplateDetail\PushOpenAction.cs" />
+    <Compile Include="Communication\PushOpenActionType.cs" />
     <Compile Include="CheckIn\AgeRestrictionMode.cs" />
     <Compile Include="CheckIn\GradeAndAgeMatchingMode.cs" />
     <Compile Include="CheckIn\LocationSelectionStrategy.cs" />
@@ -114,8 +112,14 @@
     <Compile Include="CodeGenerateRestEndpoint.cs" />
     <Compile Include="Communication\Chat\ChatRole.cs" />
     <Compile Include="Communication\Chat\ChatSyncType.cs" />
+    <Compile Include="Communication\CommunicationFlowInstanceRecipientUnsubscribeScope.cs" />
+    <Compile Include="Communication\CommunicationFlowInstanceRecipientStatus.cs" />
+    <Compile Include="Communication\CommunicationTemplateUsageType.cs" />
+    <Compile Include="Communication\ExitConditionType.cs" />
+    <Compile Include="Communication\ConversionGoalType.cs" />
     <Compile Include="Communication\CommunicationMessageFilter.cs" />
     <Compile Include="Communication\CommunicationTemplateVersion.cs" />
+    <Compile Include="Communication\CommunicationFlowTriggerType.cs" />
     <Compile Include="Communication\UnsubscribeLevel.cs" />
     <Compile Include="Communication\CommunicationRecipientStatus.cs" />
     <Compile Include="Communication\CommunicationStatus.cs" />

@@ -294,6 +294,12 @@
     <Compile Include="v2\Models\CodeGenerated\CategoriesController.CodeGenerated.cs" />
     <Compile Include="v2\Models\CodeGenerated\CheckInLabelsController.CodeGenerated.cs" />
     <Compile Include="v2\Models\CodeGenerated\CommunicationAttachmentsController.CodeGenerated.cs" />
+    <Compile Include="v2\Models\CodeGenerated\CommunicationFlowCommunicationsController.CodeGenerated.cs" />
+    <Compile Include="v2\Models\CodeGenerated\CommunicationFlowInstanceCommunicationsController.CodeGenerated.cs" />
+    <Compile Include="v2\Models\CodeGenerated\CommunicationFlowInstanceConversionHistoriesController.CodeGenerated.cs" />
+    <Compile Include="v2\Models\CodeGenerated\CommunicationFlowInstanceRecipientsController.CodeGenerated.cs" />
+    <Compile Include="v2\Models\CodeGenerated\CommunicationFlowInstancesController.CodeGenerated.cs" />
+    <Compile Include="v2\Models\CodeGenerated\CommunicationFlowsController.CodeGenerated.cs" />
     <Compile Include="v2\Models\CodeGenerated\CommunicationRecipientsController.CodeGenerated.cs" />
     <Compile Include="v2\Models\CodeGenerated\CommunicationResponseAttachmentsController.CodeGenerated.cs" />
     <Compile Include="v2\Models\CodeGenerated\CommunicationResponsesController.CodeGenerated.cs" />
