@@ -81,7 +81,7 @@ namespace Rock.Blocks.Communication
             public const string Communication = "Communication";
         }
 
-        private static class PreferenceKey
+        private static class PersonPreferenceKey
         {
             public const string FilterCreatedBy = "filter-created-by";
             public const string FilterCommunicationTypes = "filter-communication-types";
@@ -119,14 +119,14 @@ namespace Rock.Blocks.Communication
         /// Gets the unique identifier of the "created by" <see cref="PersonAlias"/> by whom to filter the results.
         /// </summary>
         private Guid? FilterCreatedByPersonAliasGuid => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterCreatedBy )
+            .GetValue( PersonPreferenceKey.FilterCreatedBy )
             .FromJsonOrNull<ListItemBag>()?.Value?.AsGuidOrNull();
 
         /// <summary>
         /// Gets the list of <see cref="CommunicationType"/> integer values by which to filter the results.
         /// </summary>
         private List<int> FilterCommunicationTypes => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterCommunicationTypes )
+            .GetValue( PersonPreferenceKey.FilterCommunicationTypes )
             .SplitDelimitedValues()
             .Select( t => t.AsIntegerOrNull() )
             .Where( t => t.HasValue )
@@ -137,48 +137,48 @@ namespace Rock.Blocks.Communication
         /// Gets whether to hide results whose status is <see cref="CommunicationStatus.Draft"/>.
         /// </summary>
         private bool FilterHideDrafts => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterHideDrafts )
+            .GetValue( PersonPreferenceKey.FilterHideDrafts )
             .AsBoolean();
 
         /// <summary>
         /// Gets the send date range by which to filter the results.
         /// </summary>
         private SlidingDateRangeBag FilterSendDateRange => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterSendDateRange )
+            .GetValue( PersonPreferenceKey.FilterSendDateRange )
             .ToSlidingDateRangeBagOrNull();
 
         /// <summary>
         /// Gets the lower recipient count limit by which to filter the results.
         /// </summary>
         private int? FilterRecipientCountLower => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterRecipientCountLower )
+            .GetValue( PersonPreferenceKey.FilterRecipientCountLower )
             .AsIntegerOrNull();
 
         /// <summary>
         /// Gets the upper recipient count limit by which to filter the results.
         /// </summary>
         private int? FilterRecipientCountUpper => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterRecipientCountUpper )
+            .GetValue( PersonPreferenceKey.FilterRecipientCountUpper )
             .AsIntegerOrNull();
 
         /// <summary>
         /// Gets the unique identifier of the Topic <see cref="DefinedValue"/> by which to filter the results.
         /// </summary>
         private Guid? FilterTopicValueGuid => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterTopic )
+            .GetValue( PersonPreferenceKey.FilterTopic )
             .FromJsonOrNull<ListItemBag>()?.Value?.AsGuidOrNull();
 
         /// <summary>
         /// Gets the name by which to filter the results.
         /// </summary>
         private string FilterName => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterName );
+            .GetValue( PersonPreferenceKey.FilterName );
 
         /// <summary>
         /// Gets the content by which to filter the results.
         /// </summary>
         private string FilterContent => BlockPersonPreferences
-            .GetValue( PreferenceKey.FilterContent );
+            .GetValue( PersonPreferenceKey.FilterContent );
 
         #endregion Properties
 
@@ -267,10 +267,18 @@ namespace Rock.Blocks.Communication
         , c.[CommunicationTemplateId]
         , c.[SystemCommunicationId]
         , c.[CommunicationType] AS [Type]
+        -- TODO (Jason): Pick one of the following name approaches.
+        -- This is the way the Legacy Communication List block chose the value to display in the grid:
+        --, CASE
+        --    WHEN c.[Subject] IS NOT NULL AND c.[Subject] <> '' THEN c.[Subject]
+        --    WHEN c.[PushTitle] IS NOT NULL AND c.[PushTitle] <> '' THEN c.[PushTitle]
+        --    ELSE c.[Name]
+        --  END AS [Name]
+        -- This is the way the Legacy Communication Detail block chose the title for the block:
         , CASE
+            WHEN c.[Name] IS NOT NULL AND c.[Name] <> '' THEN c.[Name]
             WHEN c.[Subject] IS NOT NULL AND c.[Subject] <> '' THEN c.[Subject]
-            WHEN c.[PushTitle] IS NOT NULL AND c.[PushTitle] <> '' THEN c.[PushTitle]
-            ELSE c.[Name]
+            ELSE c.[PushTitle]
           END AS [Name]
         , c.[Summary]
         , c.[Status]

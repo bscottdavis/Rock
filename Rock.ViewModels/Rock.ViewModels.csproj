@@ -133,6 +133,15 @@
     <Compile Include="Blocks\Communication\Chat\ChatView\ChatPersonSettingsBag.cs" />
     <Compile Include="Blocks\Communication\Chat\ChatView\ChatViewConfigurationBag.cs" />
     <Compile Include="Blocks\Communication\Chat\ChatView\ChatViewInitializationBox.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationActivityFlowBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationAnalyticsResponseBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationDeliveryBreakdownBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationDetailBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationDetailInitializationBox.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationAnalyticsRequestBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationKpisBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationLinkAnalyticsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationDetail\CommunicationRecipientGridSettingsBag.cs" />
     <Compile Include="Blocks\Communication\CommunicationEntryWizard\CommunicationEntryWizardGetEmailPreviewHtmlBag.cs" />
     <Compile Include="Blocks\Communication\CommunicationEntryWizard\CommunicationEntryWizardCheckShortLinkTokenBag.cs" />
     <Compile Include="Blocks\Communication\CommunicationEntryWizard\CommunicationEntryWizardSaveCommunicationTemplateResponseBag.cs" />

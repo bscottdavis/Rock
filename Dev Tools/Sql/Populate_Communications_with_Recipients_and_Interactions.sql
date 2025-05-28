@@ -252,7 +252,7 @@ BEGIN
         , [SendDateTime]
         , [SmsFromSystemPhoneNumberId]
         , [CommunicationTopicValueId]
-        --, [Summary]
+        , [Summary]
     )
     VALUES
     (
@@ -278,7 +278,7 @@ BEGIN
             ELSE NULL
           END
         , @TopicId
-        --, @Summary
+        , @Summary
     );
     DECLARE @CommId INT = SCOPE_IDENTITY();
 

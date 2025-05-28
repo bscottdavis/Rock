@@ -128,6 +128,7 @@
     <Compile Include="Cms\ThemeDetail.cs" />
     <Compile Include="Communication\Chat\ChatConfiguration.cs" />
     <Compile Include="Communication\Chat\ChatView.cs" />
+    <Compile Include="Communication\CommunicationDetail.cs" />
     <Compile Include="Communication\CommunicationEntryWizard.cs" />
     <Compile Include="Communication\CommunicationEntry\ValidationContext.cs" />
     <Compile Include="Communication\CommunicationEntry\ValidationContextExtensions.cs" />

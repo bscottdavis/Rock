@@ -1,0 +1,157 @@
+<!-- Copyright by the Spark Development Network; Licensed under the Rock Community License -->
+<template>
+    <Grid v-if="gridDefinition"
+          :definition="gridDefinition"
+          :data="gridDataSource"
+          keyField="idKey"
+          title="Recipient Log">
+
+        <SelectColumn />
+
+        <PersonColumn name="person"
+                      field="person"
+                      title="Name" />
+
+        <DateTimeColumn name="lastActivityDateTime"
+                        field="lastActivityDateTime"
+                        title="Last Activity" />
+
+        <NumberColumn name="opensCount"
+                      field="opensCount"
+                      title="Opens" />
+
+        <NumberColumn name="clicksCount"
+                      field="clicksCount"
+                      title="Clicks" />
+
+        <Column name="medium"
+                field="communicationType"
+                title="Medium">
+            <template #format="{ row }">
+                <MediumCell :row="(row as RecipientGridRow)" />
+            </template>
+        </Column>
+
+        <Column name="wasDelivered"
+                field="wasDelivered"
+                title="Delivered">
+            <template #format="{ row }">
+                <BooleanWithTooltipCell :isTrue="(row as RecipientGridRow).wasDelivered" />
+            </template>
+        </Column>
+
+        <Column name="openedDateTime"
+                field="openedDateTime"
+                title="Opened">
+            <template #format="{ row }">
+                <BooleanWithTooltipCell :isTrue="!!(row as RecipientGridRow).openedDateTime" />
+            </template>
+        </Column>
+
+        <Column name="clickedDateTime"
+                field="clickedDateTime"
+                title="Clicked">
+            <template #format="{ row }">
+                <BooleanWithTooltipCell :isTrue="!!(row as RecipientGridRow).clickedDateTime" />
+            </template>
+        </Column>
+
+        <Column name="unsubscribedDateTime"
+                field="unsubscribedDateTime"
+                title="Unsubscribed">
+            <template #format="{ row }">
+                <BooleanWithTooltipCell :isTrue="!!(row as RecipientGridRow).unsubscribedDateTime" />
+            </template>
+        </Column>
+
+        <Column name="markedAsSpamDateTime"
+                field="markedAsSpamDateTime"
+                title="Spam">
+            <template #format="{ row }">
+                <BooleanWithTooltipCell :isTrue="!!(row as RecipientGridRow).markedAsSpamDateTime" />
+            </template>
+        </Column>
+
+    </Grid>
+</template>
+
+<script setup lang="ts">
+    import { PropType, reactive, ref } from "vue";
+    import BooleanWithTooltipCell from "./booleanWithTooltipCell.partial.obs";
+    import MediumCell from "./mediumCell.partial.obs";
+    import { PreferenceKey, RecipientGridRow, RecipientGridSettingsOptions } from "./types.partial";
+    import Grid, { Column, DateTimeColumn, dateValueFilter, NumberColumn, numberValueFilter, PersonColumn, pickExistingValueFilter, SelectColumn } from "@Obsidian/Controls/grid";
+    import { useInvokeBlockAction, usePersonPreferences } from "@Obsidian/Utility/block";
+    import { CommunicationRecipientGridSettingsBag } from "@Obsidian/ViewModels/Blocks/Communication/CommunicationDetail/communicationRecipientGridSettingsBag";
+    import { GridDataBag } from "@Obsidian/ViewModels/Core/Grid/gridDataBag";
+    import { GridDefinitionBag } from "@Obsidian/ViewModels/Core/Grid/gridDefinitionBag";
+    import { CommunicationType } from "@Obsidian/Enums/Communication/communicationType";
+
+    const invokeBlockAction = useInvokeBlockAction();
+    const preferences = usePersonPreferences().blockPreferences;
+
+    defineProps({
+        gridDefinition: {
+            type: Object as PropType<GridDefinitionBag | null | undefined>,
+            required: true
+        }
+    });
+
+    // #region Values
+
+    const gridDataSource = ref<Promise<GridDataBag>>();
+    let gridData: GridDataBag | undefined;
+
+    // const isGridSettingsVisible = ref(false);
+    // const gridSettings = ref<RecipientGridSettingsOptions>({
+    //     basicColumns: JSON.parse(preferences.getValue(PreferenceKey.RecipientGridBasicColumns) || "[]"),
+    //     additionalColumns: JSON.parse(preferences.getValue(PreferenceKey.RecipientGridAdditionalColumns) || "[]")
+    // });
+
+    // #endregion Values
+
+    // #region Computed Values
+
+    // const hasSettingsFilters = computed((): boolean => {
+    //     return !!(
+    //         gridSettings.value.basicColumns.length
+    //         || gridSettings.value.additionalColumns.length
+    //     );
+    // });
+
+    // #endregion Computed Values
+
+    // #region Functions
+
+    /**
+     * Called when the grid is requesting the row data be loaded.
+     */
+    async function loadGridData(): Promise<GridDataBag> {
+        const result = await invokeBlockAction<GridDataBag>("GetRecipientGridData");
+
+        if (result.isSuccess && result.data) {
+            gridData = reactive(result.data);
+            return gridData;
+        }
+        else {
+            throw new Error(result.errorMessage ?? "Unknown error while trying to load grid data.");
+        }
+    }
+
+    // #endregion Functions
+
+    // #region Watchers
+
+    // watch(gridSettings, async () => {
+    //     preferences.setValue(PreferenceKey.RecipientGridBasicColumns, JSON.stringify(gridSettings.value.basicColumns));
+    //     preferences.setValue(PreferenceKey.RecipientGridAdditionalColumns, JSON.stringify(gridSettings.value.additionalColumns));
+
+    //     await preferences.save();
+
+    //     gridDataSource.value = loadGridData();
+    // });
+
+    // #endregion Watchers
+
+    gridDataSource.value = loadGridData();
+</script>
