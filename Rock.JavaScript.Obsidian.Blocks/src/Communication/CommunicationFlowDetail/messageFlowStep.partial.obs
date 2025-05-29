@@ -10,70 +10,21 @@
                        body="On this page, you get to configure each of the messages that compose your flow. For each message, you can set what kind of medium it is, when and how it is triggered, and what content you want to send." />
 
             <fieldset>
-                <ConnectedList>
-                    <template v-for="communication in orderedCommunications" :key="communication.guid">
-                        <CommunicationTrigger v-model:daysToWait="communication.daysToWait"
-                                              v-model:timeToSend="communication.timeToSend"
-                                              :disabled="disabled" />
+                <template v-for="communication in orderedCommunications" :key="communication.guid">
+                    <Communication :communication="communication"
+                                   :communicationCount="communications.length"
+                                   :disabled="disabled"
+                                   @delete="onDeleteClicked(communication)"
+                                   @edit="onEditClicked(communication)"
+                                   @moveUp="onMoveUpClicked(communication)"
+                                   @moveDown="onMoveDownClicked(communication)"
+                                   @update:communication="onCommunicationUpdated(communication, $event)" />
+                </template>
 
-                        <ConnectedListButton :aside="communication.communicationType === CommunicationType.Email ? communication.communicationTemplate?.fromEmail : communication.communicationType === CommunicationType.SMS ? communication.communicationTemplate?.smsFromSystemPhoneNumber?.value : null"
-                                             :asideIconCssClass="communication.communicationType === CommunicationType.Email ? 'fa fa-envelope' : communication.communicationType === CommunicationType.SMS ? 'fa fa-sms' : null"
-                                             :badgeText="`Step ${communication.order + 1}`"
-                                             :description="communication.communicationType === CommunicationType.Email ? communication.communicationTemplate?.subject : communication.communicationType === CommunicationType.SMS ? communication.communicationTemplate?.smsMessage : communication.communicationType === CommunicationType.PushNotification ? communication.communicationTemplate?.pushMessage : null"
-                                             :title="communication.name"
-                                             :secondaryActions="[
-                                                {
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-angle-double-up',
-                                                    title: 'Move Up',
-                                                    handler: () => onMoveUpClicked(communication)
-                                                },
-                                                {
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-angle-double-down',
-                                                    title: 'Move Down',
-                                                    handler: () => onMoveDownClicked(communication)
-                                                },
-                                                {
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-edit text-info',
-                                                    title: 'Edit',
-                                                    handler: () => onEditClicked(communication)
-                                                },
-                                                {
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-trash text-danger',
-                                                    title: 'Delete',
-                                                    handler: () => onDeleteClicked(communication)
-                                                },
-                                            ]" />
-                    </template>
-
-                    <ConnectedListAddButton addText="Add Message"
-                                            :actions="[
-                                                {
-                                                    actionCssClass: 'add-message-action',
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-envelope text-info',
-                                                    title: 'Email',
-                                                    handler: onEmailClicked
-                                                },
-                                                {
-                                                    actionCssClass: 'add-message-action',
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-sms text-info',
-                                                    title: 'SMS',
-                                                    handler: onSmsClicked
-                                                },
-                                                {
-                                                    actionCssClass: 'add-message-action',
-                                                    type: 'default',
-                                                    iconCssClass: 'fa fa-mobile-alt text-info',
-                                                    title: 'Push Notification',
-                                                    handler: onPushClicked
-                                                }
-                                            ]" />
-                </ConnectedList>
+                <AddMessageButton :disabled="disabled"
+                                  @email="onEmailClicked"
+                                  @sms="onSmsClicked"
+                                  @push="onPushClicked" />
             </fieldset>
         </RockForm>
 
@@ -175,7 +126,6 @@
     import { computed, PropType, ref } from "vue";
     import AddMessageButton from "./addMessageButton.partial.obs";
     import Communication from "./communication.partial.obs";
-    import CommunicationTrigger from "./communicationTrigger.partial.obs";
     import CreateEmailMessageModal from "./createEmailMessageModal.partial.obs";
     import CreatePushMessageModal from "./createPushMessageModal.partial.obs";
     import CreateSmsMessageModal from "./createSmsMessageModal.partial.obs";
@@ -183,9 +133,6 @@
     import GuideWell from "./guideWell.partial.obs";
     import { DeleteTextArgs, SendTestOptions } from "./types.partial";
     import { isEnumValue, triggerTypeToText } from "./utils.partial";
-    import ConnectedList from "@Obsidian/Controls/connectedList.obs";
-    import ConnectedListButton from "@Obsidian/Controls/connectedListButton.obs";
-    import ConnectedListAddButton from "@Obsidian/Controls/connectedListAddButton.obs";
     import DropDownList from "@Obsidian/Controls/dropDownList.obs";
     import HighlightLabel from "@Obsidian/Controls/highlightLabel.obs";
     import Panel from "@Obsidian/Controls/panel.obs";
