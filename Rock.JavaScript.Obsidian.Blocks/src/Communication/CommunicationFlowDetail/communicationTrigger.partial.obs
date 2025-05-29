@@ -1,38 +1,44 @@
 <template>
-    <DropDownContent class="communication-time-trigger-button"
-                     :disabled="disabled"
-                     preventOverflowClipping
-                     showArrow>
-        <template #anchor>
-            <RockButton btnSize="xs" :disabled="disabled">
-                <template v-if="internalDaysToWait">
-                    <i class="fa fa-clock"></i> <span class="text-muted">Wait</span> <strong>{{ internalDaysToWait }}</strong> {{ internalDaysToWait === 1 ? 'Day' : 'Days' }}, <span class="text-muted">Send at</span> <strong>{{ timeToSendAsString }}</strong> <i class="fa fa-chevron-down"></i>
-                </template>
+    <div class="communication-trigger">
+        <DropDownContent class="communication-trigger-button"
+                         :disabled="disabled"
+                         preventOverflowClipping
+                         showArrow>
+            <template #anchor>
+                <RockButton btnSize="xs" :disabled="disabled">
+                    <template v-if="nonNullableDaysToWait">
+                        <i class="fa fa-clock"></i> <span class="text-muted">Wait</span> <strong>{{ nonNullableDaysToWait }}</strong> {{ nonNullableDaysToWait === 1 ? 'Day' : 'Days' }}, <span class="text-muted">Send at</span> <strong>{{ timeToSendAsString }}</strong> <i class="fa fa-chevron-down"></i>
+                    </template>
 
-                <template v-else>
-                    <i class="fa fa-bolt"></i> <span class="text-muted">Start</span> <strong>Immediately</strong>, <span class="text-muted">Send at</span> <strong>{{ timeToSendAsString }}</strong> <i class="fa fa-chevron-down"></i>
-                </template>
-            </RockButton>
-        </template>
+                    <template v-else>
+                        <i class="fa fa-bolt"></i> <span class="text-muted">Start</span> <strong>Immediately</strong>, <span class="text-muted">Send at</span> <strong>{{ timeToSendAsString }}</strong> <i class="fa fa-chevron-down"></i>
+                    </template>
+                </RockButton>
+            </template>
 
-        <div class="communication-time-trigger-content">
-            <RockLabel>Wait</RockLabel>
-            <NumberBox v-model="nonNullableDaysToWait"
-                       :disabled="disabled"
-                       :minimumValue="0">
-                <template #inputGroupAppend>
-                    <span class="input-group-addon">Day(s)</span>
-                </template>
-            </NumberBox>
+            <div class="communication-trigger-content">
+                <RockLabel>Wait</RockLabel>
+                <NumberBox v-model="nonNullableDaysToWait"
+                           :disabled="disabled"
+                           :minimumValue="0">
+                    <template #inputGroupAppend>
+                        <span class="input-group-addon">Day(s)</span>
+                    </template>
+                </NumberBox>
 
-            <RockLabel>Send At</RockLabel>
-            <TimePicker v-model="timeToSendAsPickerValue" :disabled="disabled" />
-        </div>
-    </DropDownContent>
+                <RockLabel>Send At</RockLabel>
+                <TimePicker v-model="timeToSendAsPickerValue" :disabled="disabled" />
+            </div>
+        </DropDownContent>
+    </div>
 </template>
 
 <style scoped>
-.communication-time-trigger-content {
+.communication-trigger {
+    text-align: center;
+}
+
+.communication-trigger-content {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -49,12 +55,13 @@
     import RockLabel from "@Obsidian/Controls/rockLabel.obs";
     import TimePicker from "@Obsidian/Controls/timePicker.obs";
     import { useVModelPassthrough } from "@Obsidian/Utility/component";
-    import { TimePickerValue } from "@Obsidian/ViewModels/Controls/timePickerValue";
     import { toNumber } from "@Obsidian/Utility/numberUtils";
+    import { CommunicationFlowCommunicationBag } from "@Obsidian/ViewModels/Blocks/Communication/CommunicationFlowDetail/communicationFlowCommunicationBag";
+    import { TimePickerValue } from "@Obsidian/ViewModels/Controls/timePickerValue";
 
     const props = defineProps({
-        daysToWait: {
-            type: Number as PropType<number>,
+        communication: {
+            type: Object as PropType<CommunicationFlowCommunicationBag>,
             required: true
         },
 
@@ -62,22 +69,16 @@
             type: Boolean as PropType<boolean>,
             required: true
         },
-
-        timeToSend: {
-            type: String as PropType<string>,
-            required: true
-        },
     });
 
     const emit = defineEmits<{
-        (e: "update:daysToWait", value: number): void;
+        (e: "update:communication", value: CommunicationFlowCommunicationBag): void;
         (e: "update:timeToSend", value: string): void;
     }>();
 
     // #region Values
 
-    const internalDaysToWait = useVModelPassthrough(props, "daysToWait", emit);
-    const internalTimeToSend = useVModelPassthrough(props, "timeToSend", emit);
+    const internalCommunication = useVModelPassthrough(props, "communication", emit);
 
     // #endregion Values
 
@@ -85,7 +86,7 @@
 
     const timeToSendAsPickerValue = computed<TimePickerValue>({
         get() {
-            const values = /^(\d+):(\d+)/.exec(internalTimeToSend.value);
+            const values = /^(\d+):(\d+)/.exec(internalCommunication.value.timeToSend ?? "");
 
             if (values !== null) {
                 return {
@@ -98,12 +99,15 @@
             }
         },
         set(value: TimePickerValue) {
-            internalTimeToSend.value = `${value.hour}:${value.minute}:00`;
+            internalCommunication.value = {
+                ...internalCommunication.value,
+                timeToSend: value.hour !== undefined && value.minute !== undefined ? `${value.hour}:${value.minute}` : ""
+            };
         }
     });
 
     const timeToSendAsString = computed<string>(() => {
-        const values = /^(\d+):(\d+)/.exec(internalTimeToSend.value);
+        const values = /^(\d+):(\d+)/.exec(internalCommunication.value.timeToSend ?? "");
 
         if (values !== null) {
             const hour = toNumber(values[1]);
@@ -118,10 +122,13 @@
 
     const nonNullableDaysToWait = computed<number | null>({
         get() {
-            return internalDaysToWait.value ?? 0;
+            return internalCommunication.value.daysToWait;
         },
         set(value: number | null) {
-            internalDaysToWait.value = value ?? 0;
+            internalCommunication.value = {
+                ...internalCommunication.value,
+                daysToWait: value ?? 0
+            };
         }
     });
 

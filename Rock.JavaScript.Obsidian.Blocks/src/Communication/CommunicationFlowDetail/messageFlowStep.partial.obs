@@ -12,9 +12,9 @@
             <fieldset>
                 <ConnectedList>
                     <template v-for="communication in orderedCommunications" :key="communication.guid">
-                        <CommunicationTrigger v-model:daysToWait="communication.daysToWait"
-                                              v-model:timeToSend="communication.timeToSend"
-                                              :disabled="disabled" />
+                        <CommunicationTrigger :communication="communication"
+                                              :disabled="disabled"
+                                              @update:communication="onCommunicationUpdated(communication, $event)" />
 
                         <ConnectedListButton :aside="communication.communicationType === CommunicationType.Email ? communication.communicationTemplate?.fromEmail : communication.communicationType === CommunicationType.SMS ? communication.communicationTemplate?.smsFromSystemPhoneNumber?.value : null"
                                              :asideIconCssClass="communication.communicationType === CommunicationType.Email ? 'fa fa-envelope' : communication.communicationType === CommunicationType.SMS ? 'fa fa-sms' : null"
@@ -173,8 +173,6 @@
 
 <script setup lang="ts">
     import { computed, PropType, ref } from "vue";
-    import AddMessageButton from "./addMessageButton.partial.obs";
-    import Communication from "./communication.partial.obs";
     import CommunicationTrigger from "./communicationTrigger.partial.obs";
     import CreateEmailMessageModal from "./createEmailMessageModal.partial.obs";
     import CreatePushMessageModal from "./createPushMessageModal.partial.obs";
