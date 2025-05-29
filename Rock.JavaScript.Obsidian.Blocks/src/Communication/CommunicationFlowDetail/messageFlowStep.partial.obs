@@ -46,7 +46,8 @@
                                                     title: 'Delete',
                                                     handler: () => onDeleteClicked(communication)
                                                 },
-                                            ]" />
+                                             ]"
+                                             @click="onEditClicked(communication)" />
                     </template>
 
                     <ConnectedListAddButton addText="Add Message"

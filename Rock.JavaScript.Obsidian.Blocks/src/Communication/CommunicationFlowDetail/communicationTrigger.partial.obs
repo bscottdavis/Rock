@@ -101,7 +101,7 @@
         set(value: TimePickerValue) {
             internalCommunication.value = {
                 ...internalCommunication.value,
-                timeToSend: value.hour !== undefined && value.minute !== undefined ? `${value.hour}:${value.minute}` : ""
+                timeToSend: value.hour !== undefined && value.minute !== undefined ? `${value.hour.toString().padStart(2, "0")}:${value.minute.toString().padStart(2, "0")}:00` : ""
             };
         }
     });
