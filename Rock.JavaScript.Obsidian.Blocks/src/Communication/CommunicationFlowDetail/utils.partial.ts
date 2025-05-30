@@ -18,6 +18,7 @@
 import { CommunicationFlowTriggerType } from "@Obsidian/Enums/Communication/communicationFlowTriggerType";
 import { DeleteText, DeleteTextArgs, TemplateArgs } from "./types.partial";
 import { nextTick, onBeforeUnmount, Ref, watch } from "vue";
+import { isNullish } from "@Obsidian/Utility/util";
 
 export function isEnumValue<T extends Record<string, number | string>>(enumObject: T, value: unknown): value is T[keyof T] {
     return Object.values(enumObject).includes(value as T[keyof T]);
@@ -51,6 +52,16 @@ export function withIndefiniteArticle(word: string): string {
     }
 
     return `a ${word}`;
+}
+
+export function getPreheaderText(html: string | null | undefined): string | null | undefined {
+    if (isNullish(html)) {
+        return html;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    return getPreheaderTextFromDoc(doc);
 }
 
 export function getPreheaderTextFromDoc(doc: Document): string | null {

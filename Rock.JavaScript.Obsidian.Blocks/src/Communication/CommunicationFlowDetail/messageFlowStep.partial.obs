@@ -16,10 +16,11 @@
                                               :disabled="disabled"
                                               @update:communication="onCommunicationUpdated(communication, $event)" />
 
-                        <ConnectedListButton :aside="communication.communicationType === CommunicationType.Email ? communication.communicationTemplate?.fromEmail : communication.communicationType === CommunicationType.SMS ? communication.communicationTemplate?.smsFromSystemPhoneNumber?.value : null"
-                                             :asideIconCssClass="communication.communicationType === CommunicationType.Email ? 'fa fa-envelope' : communication.communicationType === CommunicationType.SMS ? 'fa fa-sms' : null"
+                        <ConnectedListButton :aside="getConnectedListButtonAside(communication)"
+                                             :asideIconCssClass="getConnectedListButtonAsideIconCssClass(communication)"
                                              :badgeText="`Step ${communication.order + 1}`"
-                                             :description="communication.communicationType === CommunicationType.Email ? communication.communicationTemplate?.subject : communication.communicationType === CommunicationType.SMS ? communication.communicationTemplate?.smsMessage : communication.communicationType === CommunicationType.PushNotification ? communication.communicationTemplate?.pushMessage : null"
+                                             :description="getConnectedListButtonDescription(communication)"
+                                             :iconCssClass="getConnectedListButtonIconCssClass(communication)"
                                              :title="communication.name"
                                              :secondaryActions="[
                                                 {
@@ -46,7 +47,7 @@
                                                     title: 'Delete',
                                                     handler: () => onDeleteClicked(communication)
                                                 },
-                                             ]"
+                                            ]"
                                              @click="onEditClicked(communication)" />
                     </template>
 
@@ -57,21 +58,21 @@
                                                     type: 'default',
                                                     iconCssClass: 'fa fa-envelope text-info',
                                                     title: 'Email',
-                                                    handler: onEmailClicked
+                                                    handler: onAddEmailClicked
                                                 },
                                                 {
                                                     actionCssClass: 'add-message-action',
                                                     type: 'default',
                                                     iconCssClass: 'fa fa-sms text-info',
                                                     title: 'SMS',
-                                                    handler: onSmsClicked
+                                                    handler: onAddSmsClicked
                                                 },
                                                 {
                                                     actionCssClass: 'add-message-action',
                                                     type: 'default',
                                                     iconCssClass: 'fa fa-mobile-alt text-info',
                                                     title: 'Push Notification',
-                                                    handler: onPushClicked
+                                                    handler: onAddPushClicked
                                                 }
                                             ]" />
                 </ConnectedList>
@@ -181,7 +182,7 @@
     import DeleteConfirmation from "./deleteConfirmation.partial.obs";
     import GuideWell from "./guideWell.partial.obs";
     import { DeleteTextArgs, SendTestOptions } from "./types.partial";
-    import { isEnumValue, triggerTypeToText } from "./utils.partial";
+    import { getPreheaderText, isEnumValue, triggerTypeToText } from "./utils.partial";
     import ConnectedList from "@Obsidian/Controls/connectedList.obs";
     import ConnectedListButton from "@Obsidian/Controls/connectedListButton.obs";
     import ConnectedListAddButton from "@Obsidian/Controls/connectedListAddButton.obs";
@@ -320,6 +321,71 @@
 
     // #endregion Computed Values
 
+    // #region Functions
+
+    function getConnectedListButtonAside(communication: CommunicationFlowCommunicationBag): string | null | undefined {
+        if (communication.communicationType === CommunicationType.Email) {
+            return communication.communicationTemplate?.fromEmail;
+        }
+        else if (communication.communicationType === CommunicationType.SMS) {
+            return communication.communicationTemplate?.smsFromSystemPhoneNumber?.text;
+        }
+        else if (communication.communicationType === CommunicationType.PushNotification) {
+            return communication.communicationTemplate?.pushMobileApplication?.text ?? "All Applications";
+        }
+        else {
+            return null;
+        }
+    }
+
+    function getConnectedListButtonAsideIconCssClass(communication: CommunicationFlowCommunicationBag): string | null | undefined {
+        if (communication.communicationType === CommunicationType.Email) {
+            return "fa fa-address-book";
+        }
+        else if (communication.communicationType === CommunicationType.SMS) {
+            return "fa fa-phone-alt";
+        }
+        else if (communication.communicationType === CommunicationType.PushNotification) {
+            return "fa fa-dice-d6";
+        }
+        else {
+            return null;
+        }
+    }
+
+    function getConnectedListButtonIconCssClass(communication: CommunicationFlowCommunicationBag): string | null | undefined {
+        if (communication.communicationType === CommunicationType.Email) {
+            return "fa fa-envelope-o fa-lg";
+        }
+        else if (communication.communicationType === CommunicationType.SMS) {
+            return "fa fa-sms fa-lg";
+        }
+        else if (communication.communicationType === CommunicationType.PushNotification) {
+            return "fa fa-mobile-alt fa-lg";
+        }
+        else {
+            return null;
+        }
+    }
+
+    function getConnectedListButtonDescription(communication: CommunicationFlowCommunicationBag): string | null | undefined {
+        if (communication.communicationType === CommunicationType.Email) {
+            return getPreheaderText(communication.communicationTemplate?.message);
+        }
+        else if (communication.communicationType === CommunicationType.SMS) {
+            return communication.communicationTemplate?.smsMessage;
+        }
+        else if (communication.communicationType === CommunicationType.PushNotification) {
+            return communication.communicationTemplate?.pushMessage;
+        }
+        else {
+            return null;
+        }
+    }
+
+
+    // #endregion Functions
+
     // #region Event Handlers
 
     function onCommunicationUpdated(message: CommunicationFlowCommunicationBag, newMessage: CommunicationFlowCommunicationBag): void {
@@ -436,17 +502,17 @@
         }
     }
 
-    function onEmailClicked(): void {
+    function onAddEmailClicked(): void {
         isEmailBuilderShown.value = true;
         editEmailCommunication.value = null;
     }
 
-    function onSmsClicked(): void {
+    function onAddSmsClicked(): void {
         isSmsBuilderShown.value = true;
         editSmsCommunication.value = null;
     }
 
-    function onPushClicked(): void {
+    function onAddPushClicked(): void {
         isPushBuilderShown.value = true;
         editPushCommunication.value = null;
     }

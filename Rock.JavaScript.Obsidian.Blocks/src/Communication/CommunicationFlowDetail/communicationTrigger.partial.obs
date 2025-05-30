@@ -17,17 +17,22 @@
             </template>
 
             <div class="communication-trigger-content">
-                <RockLabel>Wait</RockLabel>
-                <NumberBox v-model="nonNullableDaysToWait"
-                           :disabled="disabled"
-                           :minimumValue="0">
-                    <template #inputGroupAppend>
-                        <span class="input-group-addon">Day(s)</span>
-                    </template>
-                </NumberBox>
+                <div class="communication-trigger-field">
+                    <label class="communication-trigger-field-label">Wait</label>
+                    <NumberBox v-model="nonNullableDaysToWait"
+                               inputGroupClasses="communication-trigger-field-control number-of-days"
+                               :disabled="disabled"
+                               :minimumValue="0">
+                        <template #inputGroupAppend>
+                            <span class="input-group-addon">Day(s)</span>
+                        </template>
+                    </NumberBox>
+                </div>
 
-                <RockLabel>Send At</RockLabel>
-                <TimePicker v-model="timeToSendAsPickerValue" :disabled="disabled" />
+                <div class="communication-trigger-field">
+                    <label class="communication-trigger-field-label">Send At</label>
+                    <TimePicker v-model="timeToSendAsPickerValue" :disabled="disabled" />
+                </div>
             </div>
         </DropDownContent>
     </div>
@@ -45,6 +50,21 @@
     padding: var(--spacing-large);
     gap: var(--spacing-large);
 }
+
+.communication-trigger-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-xsmall);
+}
+
+.communication-trigger-field-label {
+    margin: 0;
+}
+
+:deep(.communication-trigger-field-control.number-of-days) {
+    width: 150px;
+}
 </style>
 
 <script setup lang="ts">
@@ -52,7 +72,6 @@
     import DropDownContent from "@Obsidian/Controls/dropDownContent.obs";
     import NumberBox from "@Obsidian/Controls/numberBox.obs";
     import RockButton from "@Obsidian/Controls/rockButton.obs";
-    import RockLabel from "@Obsidian/Controls/rockLabel.obs";
     import TimePicker from "@Obsidian/Controls/timePicker.obs";
     import { useVModelPassthrough } from "@Obsidian/Utility/component";
     import { toNumber } from "@Obsidian/Utility/numberUtils";

@@ -402,21 +402,21 @@
         }
     }
 
-    async function onSaveCommunicationTemplate(bag: CommunicationFlowDetailCommunicationTemplateBag, communicationType: CommunicationType, communication: CommunicationFlowCommunicationBag | null | undefined): Promise<void> {
+    async function onSaveCommunicationTemplate(updatedCommunicationTemplate: CommunicationFlowDetailCommunicationTemplateBag, communicationType: CommunicationType, originalCommunication: CommunicationFlowCommunicationBag | null | undefined): Promise<void> {
         try {
             isSavingCommunicationTemplate.value = true;
 
             // Create a real, persisted communication template and add a new runtime communication to the flow.
             // The flow and its communications are saved when the user clicks "Save" on the panel.
             const result = await invokeBlockAction<CommunicationFlowDetailCommunicationTemplateBag>("SaveCommunicationTemplate", {
-                bag
+                bag: updatedCommunicationTemplate
             });
 
             if (result.isSuccess && result.data) {
-                if (communication) {
+                if (originalCommunication) {
                     // Copy updated template data to the existing communication.
                     const updatedCommunication = {
-                        ...communication,
+                        ...originalCommunication,
                         communicationTemplate: result.data,
                         name: result.data.name
                     };
@@ -425,7 +425,7 @@
                     // or update the existing communication if it was already in the list.
                     const newCommunications = [...communications.value];
 
-                    const index = newCommunications.findIndex(c => c.guid === communication.guid);
+                    const index = newCommunications.findIndex(c => c.guid === originalCommunication.guid);
                     if (index === -1) {
                         // If the communication was not already in the list, add it.
                         newCommunications.push(updatedCommunication);
