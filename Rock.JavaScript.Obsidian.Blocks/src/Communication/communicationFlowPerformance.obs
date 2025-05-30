@@ -41,31 +41,170 @@
     import Grid from "@Obsidian/Controls/grid";
     import Panel from "@Obsidian/Controls/panel.obs";
     import { ChartData, ChartOptions } from "@Obsidian/Libs/chart";
+    import { ChartNumericDataPointBag } from "@Obsidian/ViewModels/Reporting/chartNumericDataPointBag";
+    import { RockDateTime } from "@Obsidian/Utility/rockDateTime";
 
-    const totalFlowPerformanceOverTimeData: ChartData<"line"> = {
-        labels: ["11-1-2024", "11-2-2024", "11-3-2024", "11-4-2024", "11-5-2024",
-            "11-6-2024", "11-7-2024", "11-8-2024", "11-9-2024", "11-10-2024",
-            "11-11-2024", "11-12-2024", "11-13-2024", "11-14-2024", "11-15-2024",
-            "11-16-2024"],
-        datasets: [
-            {
-                data: [0.00, 0.01, 0.02, 0.03, 0.04,
-                    0.05, 0.06, 0.07, 0.08, 0.09,
-                    0.10, 0.11, 0.12, 0.13, 0.14,
-                    0.15],
-                label: "Conversion Rate",
-                pointBorderColor: getCssVar("--dataviz-positive-300"),
-                pointBackgroundColor: getCssVar("--dataviz-positive-300"),
-            },
-            {
-                data: [0.00, 0.00, 0.00, 0.01, 0.01,
-                    0.01, 0.02, 0.02, 0.03, 0.03,
-                    0.03, 0.03, 0.03, 0.03, 0.03,
-                    0.03],
-                label: "Unsubscribes"
-            }
-        ]
-    };
+    const totalFlowPerformanceOverTimeDataPoints: ChartNumericDataPointBag[] = [
+        {
+            value: 0.00,
+            label: "2024-09-01T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.01,
+            label: "2024-09-02T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.02,
+            label: "2024-09-03T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.03,
+            label: "2024-09-04T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.04,
+            label: "2024-09-05T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.05,
+            label: "2024-09-06T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.06,
+            label: "2024-09-07T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.07,
+            label: "2024-09-08T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.08,
+            label: "2024-09-09T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.09,
+            label: "2024-09-10T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.10,
+            label: "2024-09-11T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.11,
+            label: "2024-09-12T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.12,
+            label: "2024-09-13T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.13,
+            label: "2024-09-14T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.14,
+            label: "2024-09-15T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        },
+        {
+            value: 0.15,
+            label: "2024-09-16T00:00:00.000Z",
+            seriesName: "Conversion Rate",
+            color: "#68D391",
+        }
+    ];
+
+    class LineChartHelper {
+        private constructor(private dataPoints: ChartNumericDataPointBag[]) { }
+
+        public static fromDataPoints(dataPoints: ChartNumericDataPointBag[]): LineChartHelper {
+            return new LineChartHelper(dataPoints);
+        }
+
+        public convertLabelsToLocaleDateLabels(): LineChartHelper {
+            return new LineChartHelper(this.dataPoints.map(d => {
+                const parsedDate = RockDateTime.parseISO(d.label!);
+                if (parsedDate) {
+                    d.label = parsedDate.toLocaleShortDateString();
+                }
+                return d;
+            }));
+        }
+
+        public getChartData(): ChartData<"line"> {
+            const labels = [...new Set(this.dataPoints.map(d => d.label!))];
+            const seriesNames = [...new Set(this.dataPoints.map(d => d.seriesName!))];
+            return {
+                labels,
+                datasets: seriesNames.map(seriesName => {
+                    const colors = this.dataPoints.filter(d => d.seriesName === seriesName).map(d => d.color!);
+                    return {
+                        label: seriesName,
+                        data: this.dataPoints.filter(d => d.seriesName === seriesName).map(d => d.value),
+                        backgroundColor: colors,
+                        borderColor: colors,
+                    };
+                })
+            };
+        }
+    }
+
+    class BarChartHelper {
+        private constructor(private dataPoints: ChartNumericDataPointBag[]) { }
+
+        public static fromDataPoints(dataPoints: ChartNumericDataPointBag[]): BarChartHelper {
+            return new BarChartHelper(dataPoints);
+        }
+
+        public getChartData(): ChartData<"bar"> {
+            const labels = [...new Set(this.dataPoints.map(d => d.seriesName!))];
+            return {
+                labels,
+                datasets: [...new Set<string>(this.dataPoints.map(d => d.label!))].map(label => (
+                    {
+                        label,
+                        data: this.dataPoints.filter(d => d.label === label).map(d => d.value),
+                        backgroundColor: this.dataPoints.filter(d => d.label === label).map(d => d.color!),
+                        borderColor: this.dataPoints.filter(d => d.label === label).map(d => d.color!),
+                        grouped: true
+                    }))
+            };
+        }
+    }
+
+    const totalFlowPerformanceOverTimeData: ChartData<"line"> = LineChartHelper
+        .fromDataPoints(totalFlowPerformanceOverTimeDataPoints)
+        .convertLabelsToLocaleDateLabels()
+        .getChartData();
 
     const totalFlowPerformanceOverTimeOptions: ChartOptions<"line"> = {
         scales: {
@@ -77,22 +216,40 @@
                     },
                 }
             }
-        }
+        },
+
     };
 
-    const instanceVsFlowPerformanceAverageData: ChartData<"bar"> = {
-        labels: ["Conversion Rate", "Unsubscribe Rate"],
-        datasets: [
-            {
-                data: [0.11, 0.01],
-                label: "Instance"
-            },
-            {
-                data: [0.09, 0.02],
-                label: "Average"
-            }
-        ]
-    };
+    const instanceVsFlowPerformanceAverageDataPoints: ChartNumericDataPointBag[] = [
+        {
+            value: 0.11,
+            label: "Instance",
+            seriesName: "Conversion Rate",
+            color: "#38A169",
+        },
+        {
+            value: 0.09,
+            label: "Average",
+            seriesName: "Conversion Rate",
+            color: "#CDEAE1",
+        },
+        {
+            value: 0.01,
+            label: "Instance",
+            seriesName: "Unsubscribe Rate",
+            color: "#E53E3E",
+        },
+        {
+            value: 0.02,
+            label: "Average",
+            seriesName: "Unsubscribe Rate",
+            color: "#FAD8D8",
+        },
+    ];
+
+    const instanceVsFlowPerformanceAverageData: ChartData<"bar"> = BarChartHelper
+        .fromDataPoints(instanceVsFlowPerformanceAverageDataPoints)
+        .getChartData();
 
     const instanceVsFlowPerformanceAverageOptions: ChartOptions<"bar"> = {
         scales: {
@@ -106,15 +263,4 @@
             }
         }
     };
-
-    // #region Functions
-
-    function getCssVar(name: string): string {
-        const computedStyle = getComputedStyle(document.documentElement)
-            .getPropertyValue(name).trim();
-
-        return computedStyle ? computedStyle : "";
-    }
-
-    // #endregion Functions
 </script>

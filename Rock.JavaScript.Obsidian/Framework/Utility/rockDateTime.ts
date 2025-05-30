@@ -620,6 +620,26 @@ export class RockDateTime {
     }
 
     /**
+     * Formats this instance using standard locale short date formatting rules
+     * to display a date in the browser's specified locale.
+     *
+     * This outputs the date in the following culture specific formats:
+     * - en-US: "M/d/yyyy"
+     * - de-DE: "d.M.yyyy"
+     * - en-GB: "dd/MM/yyyy"
+     * - ja-JP: "yyyy/M/d"
+     * - mr-IN: "MM/dd/yyyy"
+     * - pt-BR: "dd/MM/yyyy"
+     * - ru-RU: "dd.MM.yyyy"
+     * - zh-Hans-CN: "yyyy/M/d"
+     *
+     * @returns
+     */
+    public toLocaleShortDateString(): string {
+        return formatAspDate(this, "d");
+    }
+
+    /**
      * Transforms the date into a human friendly elapsed time string.
      *
      * @example
