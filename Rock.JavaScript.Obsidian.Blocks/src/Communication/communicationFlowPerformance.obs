@@ -1,8 +1,120 @@
 <!-- Copyright by the Spark Development Network; Licensed under the Rock Community License -->
 <template>
     Communication Flow Performance works!
+    <Panel title="Flow Performance" type="block">
+        <Panel title="Conversion Goal Progress"></Panel>
+
+        <Panel title="Flow Key Metrics">
+            <div class="row">
+                <div class="col-md-4">
+                    <Kpi />
+                </div>
+                <div class="col-md-4">
+                    <Kpi />
+                </div>
+                <div class="col-md-4">
+                    <Kpi />
+                </div>
+            </div>
+        </Panel>
+
+        <div class="row">
+            <div class="col-md-6">
+                <Panel title="Total Flow Performance Over Time">
+                    <Chart type="line" :data="totalFlowPerformanceOverTimeData" :options="totalFlowPerformanceOverTimeOptions" />
+                </Panel>
+            </div>
+            <div class="col-md-6">
+                <Panel title="Instance vs. Flow Performance Average">
+                    <Chart type="bar" :data="instanceVsFlowPerformanceAverageData" :options="instanceVsFlowPerformanceAverageOptions" />
+                </Panel>
+            </div>
+        </div>
+
+        <Grid />
+    </Panel>
 </template>
 
 <script setup lang="ts">
-// TBD
+    import Chart from "@Obsidian/Controls/chart.obs";
+    import Kpi from "@Obsidian/Controls/kpi.obs";
+    import Grid from "@Obsidian/Controls/grid";
+    import Panel from "@Obsidian/Controls/panel.obs";
+    import { ChartData, ChartOptions } from "@Obsidian/Libs/chart";
+
+    const totalFlowPerformanceOverTimeData: ChartData<"line"> = {
+        labels: ["11-1-2024", "11-2-2024", "11-3-2024", "11-4-2024", "11-5-2024",
+            "11-6-2024", "11-7-2024", "11-8-2024", "11-9-2024", "11-10-2024",
+            "11-11-2024", "11-12-2024", "11-13-2024", "11-14-2024", "11-15-2024",
+            "11-16-2024"],
+        datasets: [
+            {
+                data: [0.00, 0.01, 0.02, 0.03, 0.04,
+                    0.05, 0.06, 0.07, 0.08, 0.09,
+                    0.10, 0.11, 0.12, 0.13, 0.14,
+                    0.15],
+                label: "Conversion Rate",
+                pointBorderColor: getCssVar("--dataviz-positive-300"),
+                pointBackgroundColor: getCssVar("--dataviz-positive-300"),
+            },
+            {
+                data: [0.00, 0.00, 0.00, 0.01, 0.01,
+                    0.01, 0.02, 0.02, 0.03, 0.03,
+                    0.03, 0.03, 0.03, 0.03, 0.03,
+                    0.03],
+                label: "Unsubscribes"
+            }
+        ]
+    };
+
+    const totalFlowPerformanceOverTimeOptions: ChartOptions<"line"> = {
+        scales: {
+            y: {
+                ticks: {
+                    callback(tickValue, index, ticks) {
+                        // Format the tick value as a percentage
+                        return `${(Number(tickValue) * 100).toFixed(0)}%`;
+                    },
+                }
+            }
+        }
+    };
+
+    const instanceVsFlowPerformanceAverageData: ChartData<"bar"> = {
+        labels: ["Conversion Rate", "Unsubscribe Rate"],
+        datasets: [
+            {
+                data: [0.11, 0.01],
+                label: "Instance"
+            },
+            {
+                data: [0.09, 0.02],
+                label: "Average"
+            }
+        ]
+    };
+
+    const instanceVsFlowPerformanceAverageOptions: ChartOptions<"bar"> = {
+        scales: {
+            y: {
+                ticks: {
+                    callback(tickValue, index, ticks) {
+                        // Format the tick value as a percentage
+                        return `${(Number(tickValue) * 100).toFixed(0)}%`;
+                    },
+                }
+            }
+        }
+    };
+
+    // #region Functions
+
+    function getCssVar(name: string): string {
+        const computedStyle = getComputedStyle(document.documentElement)
+            .getPropertyValue(name).trim();
+
+        return computedStyle ? computedStyle : "";
+    }
+
+    // #endregion Functions
 </script>
