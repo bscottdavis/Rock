@@ -21,12 +21,12 @@
         <div class="row">
             <div class="col-md-6">
                 <Panel title="Total Flow Performance Over Time">
-                    <Chart type="line" :data="totalFlowPerformanceOverTimeData" :options="totalFlowPerformanceOverTimeOptions" />
+                    <ChartControl type="line" :data="totalFlowPerformanceOverTimeData" :options="totalFlowPerformanceOverTimeOptions" />
                 </Panel>
             </div>
             <div class="col-md-6">
                 <Panel title="Instance vs. Flow Performance Average">
-                    <Chart type="bar" :data="instanceVsFlowPerformanceAverageData" :options="instanceVsFlowPerformanceAverageOptions" />
+                    <ChartControl type="bar" :data="instanceVsFlowPerformanceAverageData" :options="instanceVsFlowPerformanceAverageOptions" :plugins="[topLine]" />
                 </Panel>
             </div>
         </div>
@@ -36,11 +36,11 @@
 </template>
 
 <script setup lang="ts">
-    import Chart from "@Obsidian/Controls/chart.obs";
+    import ChartControl from "@Obsidian/Controls/chart.obs";
     import Kpi from "@Obsidian/Controls/kpi.obs";
     import Grid from "@Obsidian/Controls/grid";
     import Panel from "@Obsidian/Controls/panel.obs";
-    import { ChartData, ChartOptions } from "@Obsidian/Libs/chart";
+    import { Chart, ChartData, ChartMeta, ChartOptions } from "@Obsidian/Libs/chart";
     import { ChartNumericDataPointBag } from "@Obsidian/ViewModels/Reporting/chartNumericDataPointBag";
     import { RockDateTime } from "@Obsidian/Utility/rockDateTime";
 
@@ -216,8 +216,7 @@
                     },
                 }
             }
-        },
-
+        }
     };
 
     const instanceVsFlowPerformanceAverageDataPoints: ChartNumericDataPointBag[] = [
@@ -251,6 +250,23 @@
         .fromDataPoints(instanceVsFlowPerformanceAverageDataPoints)
         .getChartData();
 
+    const topLine = {
+        id: "topLine",
+        afterDatasetDraw(chart: Chart<"bar">, { index: datasetIndex, meta }: { index: number; meta: ChartMeta<"bar"> }) {
+            const { ctx, data } = chart;
+
+            ctx.save();
+            chart.getDatasetMeta(datasetIndex).data.forEach((datapoint, datapointIndex) => {
+                // text
+                ctx.font = "normal 14px sans-serif";
+                ctx.fillStyle = getCssValue("--color-interface-medium");
+                ctx.textAlign = "center";
+                const label = data.datasets[datasetIndex].label;
+                ctx.fillText(typeof label === "string" ? label : "", datapoint.x, datapoint.y - 7);
+            });
+        }
+    };
+
     const instanceVsFlowPerformanceAverageOptions: ChartOptions<"bar"> = {
         scales: {
             y: {
@@ -261,6 +277,22 @@
                     },
                 }
             }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                text: "hello there"
+            }
         }
     };
+
+    // #region Functions
+
+    function getCssValue(variableName: string): string {
+        return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+    }
+
+    // #endregion Functions
 </script>
