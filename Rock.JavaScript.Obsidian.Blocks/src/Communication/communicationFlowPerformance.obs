@@ -4,30 +4,14 @@
     <Panel title="Flow Performance" type="block">
         <Panel title="Conversion Goal Progress"></Panel>
 
-        <Panel title="Flow Key Metrics">
-            <div class="row">
-                <div class="col-md-4">
-                    <Kpi />
-                </div>
-                <div class="col-md-4">
-                    <Kpi />
-                </div>
-                <div class="col-md-4">
-                    <Kpi />
-                </div>
-            </div>
-        </Panel>
-
+        <FlowKeyMetrics />
+        
         <div class="row">
             <div class="col-md-6">
-                <Panel title="Total Flow Performance Over Time">
-                    <ChartControl type="line" :data="totalFlowPerformanceOverTimeData" :options="totalFlowPerformanceOverTimeOptions" />
-                </Panel>
+                <TotalFlowPerformanceOverTime :dataPoints="totalFlowPerformanceOverTimeDataPoints" />
             </div>
             <div class="col-md-6">
-                <Panel title="Instance vs. Flow Performance Average">
-                    <ChartControl type="bar" :data="instanceVsFlowPerformanceAverageData" :options="instanceVsFlowPerformanceAverageOptions" :plugins="[topLine]" />
-                </Panel>
+                <InstanceVsFlowPerformanceAverage :dataPoints="instanceVsFlowPerformanceAverageDataPoints" />
             </div>
         </div>
 
@@ -36,13 +20,13 @@
 </template>
 
 <script setup lang="ts">
-    import ChartControl from "@Obsidian/Controls/chart.obs";
+    import FlowKeyMetrics from "./CommunicationFlowList/flowKeyMetrics.partial.obs";
+    import TotalFlowPerformanceOverTime from "./CommunicationFlowList/totalFlowPerformanceOverTime.partial.obs";
+    import InstanceVsFlowPerformanceAverage from "./CommunicationFlowList/instanceVsFlowPerformanceAverage.partial.obs";
     import Kpi from "@Obsidian/Controls/kpi.obs";
     import Grid from "@Obsidian/Controls/grid";
     import Panel from "@Obsidian/Controls/panel.obs";
-    import { Chart, ChartData, ChartMeta, ChartOptions } from "@Obsidian/Libs/chart";
     import { ChartNumericDataPointBag } from "@Obsidian/ViewModels/Reporting/chartNumericDataPointBag";
-    import { RockDateTime } from "@Obsidian/Utility/rockDateTime";
 
     const totalFlowPerformanceOverTimeDataPoints: ChartNumericDataPointBag[] = [
         {
@@ -143,82 +127,6 @@
         }
     ];
 
-    class LineChartHelper {
-        private constructor(private dataPoints: ChartNumericDataPointBag[]) { }
-
-        public static fromDataPoints(dataPoints: ChartNumericDataPointBag[]): LineChartHelper {
-            return new LineChartHelper(dataPoints);
-        }
-
-        public convertLabelsToLocaleDateLabels(): LineChartHelper {
-            return new LineChartHelper(this.dataPoints.map(d => {
-                const parsedDate = RockDateTime.parseISO(d.label!);
-                if (parsedDate) {
-                    d.label = parsedDate.toLocaleShortDateString();
-                }
-                return d;
-            }));
-        }
-
-        public getChartData(): ChartData<"line"> {
-            const labels = [...new Set(this.dataPoints.map(d => d.label!))];
-            const seriesNames = [...new Set(this.dataPoints.map(d => d.seriesName!))];
-            return {
-                labels,
-                datasets: seriesNames.map(seriesName => {
-                    const colors = this.dataPoints.filter(d => d.seriesName === seriesName).map(d => d.color!);
-                    return {
-                        label: seriesName,
-                        data: this.dataPoints.filter(d => d.seriesName === seriesName).map(d => d.value),
-                        backgroundColor: colors,
-                        borderColor: colors,
-                    };
-                })
-            };
-        }
-    }
-
-    class BarChartHelper {
-        private constructor(private dataPoints: ChartNumericDataPointBag[]) { }
-
-        public static fromDataPoints(dataPoints: ChartNumericDataPointBag[]): BarChartHelper {
-            return new BarChartHelper(dataPoints);
-        }
-
-        public getChartData(): ChartData<"bar"> {
-            const labels = [...new Set(this.dataPoints.map(d => d.seriesName!))];
-            return {
-                labels,
-                datasets: [...new Set<string>(this.dataPoints.map(d => d.label!))].map(label => (
-                    {
-                        label,
-                        data: this.dataPoints.filter(d => d.label === label).map(d => d.value),
-                        backgroundColor: this.dataPoints.filter(d => d.label === label).map(d => d.color!),
-                        borderColor: this.dataPoints.filter(d => d.label === label).map(d => d.color!),
-                        grouped: true
-                    }))
-            };
-        }
-    }
-
-    const totalFlowPerformanceOverTimeData: ChartData<"line"> = LineChartHelper
-        .fromDataPoints(totalFlowPerformanceOverTimeDataPoints)
-        .convertLabelsToLocaleDateLabels()
-        .getChartData();
-
-    const totalFlowPerformanceOverTimeOptions: ChartOptions<"line"> = {
-        scales: {
-            y: {
-                ticks: {
-                    callback(tickValue, index, ticks) {
-                        // Format the tick value as a percentage
-                        return `${(Number(tickValue) * 100).toFixed(0)}%`;
-                    },
-                }
-            }
-        }
-    };
-
     const instanceVsFlowPerformanceAverageDataPoints: ChartNumericDataPointBag[] = [
         {
             value: 0.11,
@@ -246,53 +154,7 @@
         },
     ];
 
-    const instanceVsFlowPerformanceAverageData: ChartData<"bar"> = BarChartHelper
-        .fromDataPoints(instanceVsFlowPerformanceAverageDataPoints)
-        .getChartData();
-
-    const topLine = {
-        id: "topLine",
-        afterDatasetDraw(chart: Chart<"bar">, { index: datasetIndex, meta }: { index: number; meta: ChartMeta<"bar"> }) {
-            const { ctx, data } = chart;
-
-            ctx.save();
-            chart.getDatasetMeta(datasetIndex).data.forEach((datapoint, datapointIndex) => {
-                // text
-                ctx.font = "normal 14px sans-serif";
-                ctx.fillStyle = getCssValue("--color-interface-medium");
-                ctx.textAlign = "center";
-                const label = data.datasets[datasetIndex].label;
-                ctx.fillText(typeof label === "string" ? label : "", datapoint.x, datapoint.y - 7);
-            });
-        }
-    };
-
-    const instanceVsFlowPerformanceAverageOptions: ChartOptions<"bar"> = {
-        scales: {
-            y: {
-                ticks: {
-                    callback(tickValue, index, ticks) {
-                        // Format the tick value as a percentage
-                        return `${(Number(tickValue) * 100).toFixed(0)}%`;
-                    },
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            title: {
-                text: "hello there"
-            }
-        }
-    };
-
     // #region Functions
-
-    function getCssValue(variableName: string): string {
-        return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
-    }
 
     // #endregion Functions
 </script>
