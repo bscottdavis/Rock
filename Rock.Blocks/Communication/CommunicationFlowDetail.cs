@@ -1308,8 +1308,6 @@ namespace Rock.Blocks.Communication
                 };
             }
 
-            // Other settings can be converted here.
-
             return bag;
         }
 

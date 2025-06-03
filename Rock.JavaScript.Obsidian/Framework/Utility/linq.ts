@@ -36,6 +36,11 @@ const moreThanOneElement = "More than one element was found in collection.";
 
 const noElementsFound = "No element was found in collection.";
 
+export type Grouping<TKey, TElement> = {
+    key: TKey;
+    values: TElement[];
+};
+
 /**
  * Compares the values of two objects given the selector function.
  *
@@ -553,6 +558,25 @@ export class Enumerable<T> {
     }
 
     /**
+     * Projects each element of the sequence to an iterable and flattens the resulting sequences into one sequence.
+     * @param collectionSelector A transform function to apply to each element.
+     * @returns A new Enumerable containing the flattened results.
+     */
+    selectMany<U>(collectionSelector: (item: T) => Iterable<U>): Enumerable<U> {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+
+        return new Enumerable(function* () {
+            for (const item of self) {
+                const collection = collectionSelector(item);
+                for (const subItem of collection) {
+                    yield subItem;
+                }
+            }
+        });
+    }
+
+    /**
      * Returns a new Enumerable that skips the first `count` elements of the sequence.
      * @param count - The number of elements to skip.
      * @returns A new Enumerable that skips the specified number of elements.
@@ -762,23 +786,23 @@ export class Enumerable<T> {
     }
 
     /**
- * Filters the sequence and returns only elements of the specified type.
- * @template U The target type to filter by.
- * @param typeCheck - A runtime check function to validate the type of each element.
- * @returns A new Enumerable containing elements of type `U`.
- *
- * @example
- * const mixed: Enumerable<unknown> = Enumerable.from([1, "hello", true, 42]);
- * const numbers = mixed.ofType<number>(item => typeof item === "number");
- * console.log(numbers.toArray()); // Outputs: [1, 42]
- *
- * @example
- * class Animal {}
- * class Dog extends Animal {}
- * const animals: Enumerable<Animal> = Enumerable.from([new Animal(), new Dog()]);
- * const dogs = animals.ofType<Dog>(item => item instanceof Dog);
- * console.log(dogs.toArray()); // Outputs: [Dog instance]
- */
+     * Filters the sequence and returns only elements of the specified type.
+     * @template U The target type to filter by.
+     * @param typeCheck - A runtime check function to validate the type of each element.
+     * @returns A new Enumerable containing elements of type `U`.
+     *
+     * @example
+     * const mixed: Enumerable<unknown> = Enumerable.from([1, "hello", true, 42]);
+     * const numbers = mixed.ofType<number>(item => typeof item === "number");
+     * console.log(numbers.toArray()); // Outputs: [1, 42]
+     *
+     * @example
+     * class Animal {}
+     * class Dog extends Animal {}
+     * const animals: Enumerable<Animal> = Enumerable.from([new Animal(), new Dog()]);
+     * const dogs = animals.ofType<Dog>(item => item instanceof Dog);
+     * console.log(dogs.toArray()); // Outputs: [Dog instance]
+     */
     ofType<U extends T>(typeCheck: (item: T) => item is U): Enumerable<U> {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
@@ -787,6 +811,106 @@ export class Enumerable<T> {
                 if (typeCheck(item)) {
                     yield item;
                 }
+            }
+        });
+    }
+
+    /**
+     * Computes the sum of the projected numeric values in the list.
+     * @param selector - A function that selects the number from each element.
+     * @returns The sum of the numbers.
+     */
+    sum(selector: (item: T) => number): number {
+        let total = 0;
+
+        for (const item of this) {
+            const value = selector(item);
+
+            if (typeof value === "number" && !isNaN(value)) {
+                total += value;
+            }
+        }
+
+        return total;
+    }
+
+    /**
+     * Computes the average of the projected numeric values in the sequence.
+     * @param selector - A function that selects the number from each element.
+     * @returns The average of the numbers.
+     * @throws Error if no valid numeric elements are found.
+     */
+    average(selector: (item: T) => number): number {
+        let total = 0;
+        let count = 0;
+
+        for (const item of this) {
+            const value = selector(item);
+
+            if (typeof value === "number" && !isNaN(value)) {
+                total += value;
+                count++;
+            }
+        }
+
+        if (count === 0) {
+            return 0;
+        }
+        else {
+            return total / count;
+        }
+    }
+
+    /**
+     * Returns the number of elements in the sequence.
+     * @returns The total number of elements.
+     */
+    count(): number;
+
+    /**
+     * Returns the number of elements in the sequence that satisfy the specified predicate.
+     * @param predicate A function to test each element.
+     * @returns The number of matching elements.
+     */
+    count(predicate: (item: T) => boolean): number;
+
+    count(predicate?: (item: T) => boolean): number {
+        let total = 0;
+
+        for (const item of this) {
+            if (!predicate || predicate(item)) {
+                total++;
+            }
+        }
+
+        return total;
+    }
+
+    /**
+     * Groups the elements of a sequence according to a specified key selector function.
+     * @param keySelector A function to extract the key for each element.
+     * @returns A new Enumerable of groupings.
+     */
+    groupBy<TKey>(keySelector: (item: T) => TKey): Enumerable<Grouping<TKey, T>> {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+
+        return new Enumerable(function* () {
+            const map = new Map<TKey, T[]>();
+
+            for (const item of self) {
+                const key = keySelector(item);
+                const group = map.get(key);
+                if (group) {
+                    group.push(item);
+                }
+                else {
+                    map.set(key, [item]);
+                }
+            }
+
+            for (const [key, values] of map) {
+                yield { key, values };
             }
         });
     }

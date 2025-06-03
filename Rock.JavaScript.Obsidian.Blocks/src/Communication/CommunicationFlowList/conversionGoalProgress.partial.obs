@@ -1,0 +1,39 @@
+<template>
+    <Panel>
+        <template #title>
+            Conversion Goal Progress <HighlightLabel v-if="isPending" labelType="warning">Pending</HighlightLabel>
+        </template>
+
+        <div class="goal-summary">
+            <span><i class="fa fa-bullseye"></i>
+                {{ conversionGoalSummary }}
+            </span>
+        </div>
+    </Panel>
+</template>
+
+<style scoped>
+.goal-summary {
+    color: var(--color-info-strong);
+    font-size: var(--font-size-h4);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-small);
+}
+</style>
+
+<script setup lang="ts">
+    import { PropType } from "vue";
+    import Panel from "@Obsidian/Controls/panel.obs";
+
+    defineProps({
+        conversionGoalSummary: {
+            type: String as PropType<string>,
+            required: true
+        },
+
+        isPending: {
+            type: Boolean as PropType<boolean>,
+            required: true
+        }
+    });
+</script>

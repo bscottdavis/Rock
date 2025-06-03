@@ -2,10 +2,23 @@
 <template>
     Communication Flow Performance works!
     <Panel title="Flow Performance" type="block">
+        <DropDownList v-if="config.communicationFlow?.triggerType === CommunicationFlowTriggerType.Recurring"
+                      v-model="selectedRecurringFlowInstanceGuidOrEmptyString"
+                      :items="communicationFlowInstanceItems ?? []"
+                      label="Flow Instance" />
+
+        <ConversionGoalProgress v-if="conversionGoalSummary"
+                                :conversionGoalSummary="conversionGoalSummary"
+                                :isPending="isPending" />
+
         <Panel title="Conversion Goal Progress"></Panel>
 
-        <FlowKeyMetrics />
-        
+        <FlowKeyMetrics :averageTimeBeforeConversion="averageTimeBeforeConversion"
+                        :conversionCount="conversionCount"
+                        :isPending="isPending"
+                        :unsubscribesFromAll="unsubscribeFromCounts.unsubscribeFromAllCount"
+                        :unsubscribesFromFlow="unsubscribeFromCounts.unsubscribeFromFlowCount" />
+
         <div class="row">
             <div class="col-md-6">
                 <TotalFlowPerformanceOverTime :dataPoints="totalFlowPerformanceOverTimeDataPoints" />
@@ -20,112 +33,194 @@
 </template>
 
 <script setup lang="ts">
+    import { computed, ref } from "vue";
+    import ConversionGoalProgress from "./CommunicationFlowList/conversionGoalProgress.partial.obs";
     import FlowKeyMetrics from "./CommunicationFlowList/flowKeyMetrics.partial.obs";
     import TotalFlowPerformanceOverTime from "./CommunicationFlowList/totalFlowPerformanceOverTime.partial.obs";
     import InstanceVsFlowPerformanceAverage from "./CommunicationFlowList/instanceVsFlowPerformanceAverage.partial.obs";
-    import Kpi from "@Obsidian/Controls/kpi.obs";
+    import DropDownList from "@Obsidian/Controls/dropDownList.obs";
     import Grid from "@Obsidian/Controls/grid";
     import Panel from "@Obsidian/Controls/panel.obs";
+    import { CommunicationFlowTriggerType } from "@Obsidian/Enums/Communication/communicationFlowTriggerType";
+    import { Guid } from "@Obsidian/Types";
+    import { useConfigurationValues } from "@Obsidian/Utility/block";
+    import { RockTimeSpan } from "@Obsidian/Utility/rockTimeSpan";
     import { ChartNumericDataPointBag } from "@Obsidian/ViewModels/Reporting/chartNumericDataPointBag";
+    import { ListItemBag } from "@Obsidian/ViewModels/Utility/listItemBag";
+    import { RockDateTime } from "@Obsidian/Utility/rockDateTime";
+    import { ConversionGoalType } from "@Obsidian/Enums/Communication/conversionGoalType";
+    import { Enumerable } from "@Obsidian/Utility/linq";
+    import { prependSingularIndefiniteArticle } from "@Obsidian/Utility/stringUtils";
+    import { isNullish } from "@Obsidian/Utility/util";
 
-    const totalFlowPerformanceOverTimeDataPoints: ChartNumericDataPointBag[] = [
-        {
-            value: 0.00,
-            label: "2024-09-01T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.01,
-            label: "2024-09-02T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.02,
-            label: "2024-09-03T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.03,
-            label: "2024-09-04T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.04,
-            label: "2024-09-05T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.05,
-            label: "2024-09-06T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.06,
-            label: "2024-09-07T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.07,
-            label: "2024-09-08T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.08,
-            label: "2024-09-09T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.09,
-            label: "2024-09-10T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.10,
-            label: "2024-09-11T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.11,
-            label: "2024-09-12T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.12,
-            label: "2024-09-13T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.13,
-            label: "2024-09-14T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.14,
-            label: "2024-09-15T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        },
-        {
-            value: 0.15,
-            label: "2024-09-16T00:00:00.000Z",
-            seriesName: "Conversion Rate",
-            color: "#68D391",
-        }
-    ];
+    enum UnsubscribeLevel {
+        Flow = 1,
+        CommunicationList = 2,
+        Bulk = 3,
+        All = 4,
+    }
+
+    type CommunicationFlowPerformanceConversionBag = {
+        date?: string | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceRecipientBag = {
+        causedUnsubscribe: boolean;
+        unsubscribeLevel?: UnsubscribeLevel | null | undefined;
+        unsubscribeDateTime?: string | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceCommunicationFlowInstanceBag = {
+        guid: Guid;
+        startDateTime?: string | null | undefined;
+        conversions?: CommunicationFlowPerformanceConversionBag[] | null | undefined;
+        recipients?: CommunicationFlowPerformanceRecipientBag[] | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceCompletedFormSettingsBag = {
+        workflowType?: ListItemBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceJoinedGroupTypeSettingsBag = {
+        groupType?: ListItemBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceJoinedGroupSettingsBag = {
+        group?: ListItemBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceRegisteredSettingsBag = {
+        registrationInstance?: ListItemBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceTookStepSettingsBag = {
+        stepType?: ListItemBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceEnteredDataViewSettingsBag = {
+        dataView?: ListItemBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceConversionGoalSettingsBag = {
+        completedFormSettings: CommunicationFlowPerformanceCompletedFormSettingsBag | null | undefined;
+        joinedGroupTypeSettings: CommunicationFlowPerformanceJoinedGroupTypeSettingsBag | null | undefined;
+        joinedGroupSettings: CommunicationFlowPerformanceJoinedGroupSettingsBag | null | undefined;
+        registeredSettings: CommunicationFlowPerformanceRegisteredSettingsBag | null | undefined;
+        tookStepSettings: CommunicationFlowPerformanceTookStepSettingsBag | null | undefined;
+        enteredDataViewSettings: CommunicationFlowPerformanceEnteredDataViewSettingsBag | null | undefined;
+    };
+
+    type CommunicationFlowPerformanceCommunicationFlowBag = {
+        conversionGoalType?: ConversionGoalType | null | undefined;
+        conversionGoalTargetPercent?: number | null | undefined;
+        conversionGoalTimeframeInDays?: number | null | undefined;
+        conversionGoalSettings: CommunicationFlowPerformanceConversionGoalSettingsBag | null | undefined;
+        triggerType: CommunicationFlowTriggerType;
+        instances?: CommunicationFlowPerformanceCommunicationFlowInstanceBag[] | null | undefined;
+    };
+
+    const config = useConfigurationValues<{
+        communicationFlow?: CommunicationFlowPerformanceCommunicationFlowBag | null | undefined;
+    }>();
+
+    // const totalFlowPerformanceOverTimeDataPoints: ChartNumericDataPointBag[] = [
+    //     {
+    //         value: 0.00,
+    //         label: "2024-09-01T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.01,
+    //         label: "2024-09-02T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.02,
+    //         label: "2024-09-03T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.03,
+    //         label: "2024-09-04T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.04,
+    //         label: "2024-09-05T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.05,
+    //         label: "2024-09-06T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.06,
+    //         label: "2024-09-07T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.07,
+    //         label: "2024-09-08T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.08,
+    //         label: "2024-09-09T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.09,
+    //         label: "2024-09-10T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.10,
+    //         label: "2024-09-11T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.11,
+    //         label: "2024-09-12T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.12,
+    //         label: "2024-09-13T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.13,
+    //         label: "2024-09-14T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.14,
+    //         label: "2024-09-15T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     },
+    //     {
+    //         value: 0.15,
+    //         label: "2024-09-16T00:00:00.000Z",
+    //         seriesName: "Conversion Rate",
+    //         color: "#68D391",
+    //     }
+    // ];
 
     const instanceVsFlowPerformanceAverageDataPoints: ChartNumericDataPointBag[] = [
         {
@@ -153,6 +248,409 @@
             color: "#FAD8D8",
         },
     ];
+
+    // #region Values
+
+    const selectedRecurringFlowInstanceGuidOrEmptyString = ref<string>("");
+    // const averageTimeBeforeConversion = ref<RockTimeSpan | null | undefined>(RockTimeSpan.fromDays(2)); // 2 days
+    //const conversionCount = ref<number>(21);
+    const isPending = ref<boolean>(true);
+    //const unsubscribeFromAllCount = ref<number>(0);
+    //const unsubscribeFromFlowsCount = ref<number>(3);
+
+    // #endregion Values
+
+    // #region Computed Values
+
+    const communicationFlowInstanceItems = computed<ListItemBag[] | null | undefined>(() => {
+        type MonthType = Intl.DateTimeFormatOptions["month"];
+        const monthFormat: MonthType = "short"; // "Jan", "Feb", "Mar", etc.
+
+        return config.communicationFlow
+            ?.instances
+            ?.map(i => {
+                const startDateTime = i.startDateTime ? RockDateTime.parseISO(i.startDateTime) : null;
+
+                if (startDateTime === null) {
+                    return null;
+                }
+
+                // Format the date as "Tuesday, Jun. 3, 2024"
+                const partiallyFormattedStartDateTime = startDateTime.toLocaleString({
+                    weekday: "long",
+                    month: monthFormat,
+                    day: "numeric",
+                    year: "numeric"
+                });
+
+                const monthOnly = startDateTime.toLocaleString({ month: monthFormat });
+
+                const fullyFormattedStartDateTime = partiallyFormattedStartDateTime.replace(monthOnly, monthOnly + ".");
+
+                return {
+                    value: i.guid,
+                    text: fullyFormattedStartDateTime
+                } as ListItemBag;
+            })
+            .filter(i => i !== null)
+            .map(i => i!);
+    });
+
+    const selectedFlowInstances = computed<CommunicationFlowPerformanceCommunicationFlowInstanceBag[]>(() => {
+        if (config.communicationFlow?.triggerType !== CommunicationFlowTriggerType.Recurring) {
+            return [];
+        }
+
+        if (!selectedRecurringFlowInstanceGuidOrEmptyString.value) {
+            return [];
+        }
+
+        return config.communicationFlow.instances?.filter(i => i.guid === selectedRecurringFlowInstanceGuidOrEmptyString.value) ?? [];
+    });
+
+    const conversionGoalSummary = computed<string | null>(() => {
+        const conversionGoalType = config.communicationFlow?.conversionGoalType;
+        const conversionGoalTargetPercent = config.communicationFlow?.conversionGoalTargetPercent;
+        const conversionGoalTimeframeInDays = config.communicationFlow?.conversionGoalTimeframeInDays;
+        const conversionGoalSettings = config.communicationFlow?.conversionGoalSettings;
+
+        if (isNullish(conversionGoalType)
+            || !conversionGoalSettings
+            || !conversionGoalTargetPercent
+            || isNullish(conversionGoalTimeframeInDays)
+            || conversionGoalTargetPercent <= 0
+            || conversionGoalTimeframeInDays <= 0) {
+            return null;
+        }
+
+        const who = `At least ${conversionGoalTargetPercent}% of recipients`;
+        const when = conversionGoalTimeframeInDays === 1
+            ? "within 1 day of the flow's launch"
+            : `within ${conversionGoalTimeframeInDays} days of the flow's launch`;
+
+        switch (conversionGoalType) {
+            case ConversionGoalType.CompletedForm: {
+                const workflowTypeText = conversionGoalSettings.completedFormSettings?.workflowType?.text;
+
+                if (!workflowTypeText) {
+                    return null;
+                }
+
+                // Only include "the" if the workflow type is not possessive
+                // Check for possessive (e.g., "John's Form")
+                const isPossessive = /['’]s\b/i.test(workflowTypeText) || /s['’]\b/i.test(workflowTypeText);
+                const prefix = isPossessive ? "" : "the ";
+
+                // Only include "form" if the workflow type doesn't end with "form"
+                const endsWithForm = /^form$/i.test(workflowTypeText) || / form$/i.test(workflowTypeText);
+                const suffix = endsWithForm ? "" : " form";
+
+                return `${who} completed ${prefix}${workflowTypeText}${suffix} ${when}.`;
+            }
+
+            case ConversionGoalType.Registered: {
+                const registrationInstanceText = conversionGoalSettings.registeredSettings?.registrationInstance?.text;
+
+                if (!registrationInstanceText) {
+                    return null;
+                }
+
+                return `${who} registered for ${registrationInstanceText} ${when}.`;
+            }
+
+            case ConversionGoalType.JoinedGroupType: {
+                const groupTypeText = conversionGoalSettings.joinedGroupTypeSettings?.groupType?.text;
+
+                if (!groupTypeText) {
+                    return null;
+                }
+
+                // Only include "group" if the group name doesn't end with "group"
+                const endsWithGroup = /^group$/i.test(groupTypeText) || / group$/i.test(groupTypeText);
+                const suffix = endsWithGroup ? "" : " group";
+
+                return `${who} joined ${prependSingularIndefiniteArticle(groupTypeText)}${suffix} ${when}.`;
+            }
+
+            case ConversionGoalType.JoinedGroup: {
+                const groupText = conversionGoalSettings.joinedGroupSettings?.group?.text;
+
+                if (!groupText) {
+                    return null;
+                }
+
+                // Only include "the" if the group name is not possessive
+                // Check for possessive (e.g., "John's Group")
+                const isPossessive = /['’]s\b/i.test(groupText) || /s['’]\b/i.test(groupText);
+                const prefix = isPossessive ? "" : "the ";
+
+                // Only include "group" if the group name doesn't end with "group"
+                const endsWithGroup = /^group$/i.test(groupText) || / group$/i.test(groupText);
+                const suffix = endsWithGroup ? "" : " group";
+
+                return `${who} joined ${prefix}${groupText}${suffix} ${when}.`;
+            }
+
+            case ConversionGoalType.TookStep: {
+                const stepTypeText = conversionGoalSettings.tookStepSettings?.stepType?.text;
+
+                if (!stepTypeText) {
+                    return null;
+                }
+
+                // Only include "the" if the step type is not possessive
+                // Check for possessive (e.g., "John's Step")
+                const isPossessive = /['’]s\b/i.test(stepTypeText) || /s['’]\b/i.test(stepTypeText);
+                const prefix = isPossessive ? "" : "the ";
+
+                // Only include "step" if the step type doesn't end with "step"
+                const endsWithStep = /^step$/i.test(stepTypeText) || / step$/i.test(stepTypeText);
+                const suffix = endsWithStep ? "" : " step";
+
+                return `${who} completed ${prefix}${stepTypeText}${suffix} ${when}.`;
+            }
+
+            case ConversionGoalType.EnteredDataView: {
+                const dataViewText = conversionGoalSettings.enteredDataViewSettings?.dataView?.text;
+
+                if (!dataViewText) {
+                    return null;
+                }
+
+                // Only include "the" if the data view is not possessive
+                // Check for possessive (e.g., "John's Data View")
+                const isPossessive = /['’]s\b/i.test(dataViewText) || /s['’]\b/i.test(dataViewText);
+                const prefix = isPossessive ? "" : "the ";
+
+                // Only include "data view" if the data view doesn't end with "data view"
+                const endsWithStep = /^data view$/i.test(dataViewText) || / data view$/i.test(dataViewText);
+                const suffix = endsWithStep ? "" : " data view";
+
+                return `${who} entered ${prefix}${dataViewText}${suffix} ${when}.`;
+            }
+        }
+    });
+
+    const conversionCount = computed<number>(() => {
+        return Enumerable.from(selectedFlowInstances.value).sum(i => i.conversions?.length ?? 0);
+    });
+
+    const averageTimeBeforeConversion = computed<RockTimeSpan | null | undefined>(() => {
+        const averageConversionTimeMilliseconds =
+            Enumerable
+                .from(selectedFlowInstances.value)
+                .selectMany(instance => {
+                    const instanceStartDate = instance.startDateTime ? RockDateTime.parseISO(instance.startDateTime) : null;
+
+                    if (instanceStartDate === null || !instance.conversions || instance.conversions.length === 0) {
+                        return [];
+                    }
+                    else {
+                        const conversionDateTimes = Enumerable.from(instance.conversions)
+                            .select(conversion => conversion.date ? RockDateTime.parseISO(conversion.date) : null)
+                            .where(dateTime => dateTime !== null)
+                            .ofType<RockDateTime>(c => !!c);
+
+                        return conversionDateTimes
+                            .select(conversionDateTime => conversionDateTime.toMilliseconds() - instanceStartDate.toMilliseconds())
+                            .toArray();
+                    }
+                })
+                .average(conversionTimeSpanMilliseconds => conversionTimeSpanMilliseconds);
+
+        return RockTimeSpan.fromMilliseconds(averageConversionTimeMilliseconds);
+    });
+
+    const unsubscribeFromCounts = computed<{ unsubscribeFromAllCount: number; unsubscribeFromFlowCount: number; unsubscribeFromOtherCount: number; }>(() => {
+        const unsubscribedRecipients = Enumerable
+            .from(selectedFlowInstances.value)
+            .selectMany(i => i.recipients ?? [])
+            .where(r => r.causedUnsubscribe)
+            .toArray();
+
+        return {
+            unsubscribeFromAllCount: Enumerable.from(unsubscribedRecipients).count(r => r.unsubscribeLevel === UnsubscribeLevel.All),
+            unsubscribeFromFlowCount: Enumerable.from(unsubscribedRecipients).count(r => r.unsubscribeLevel === UnsubscribeLevel.Flow),
+            unsubscribeFromOtherCount: Enumerable.from(unsubscribedRecipients).count(r => !r.unsubscribeLevel || ![UnsubscribeLevel.All, UnsubscribeLevel.Flow].includes(r.unsubscribeLevel)),
+        };
+    });
+
+    const totalFlowPerformanceOverTimeDataPoints = computed<ChartNumericDataPointBag[]>(() => {
+        const dataPoints: ChartNumericDataPointBag[] = [];
+        const selectedInstancesTotalRecipientCount = Enumerable.from(selectedFlowInstances.value).sum(i => i.recipients?.length ?? 0);
+
+        if (selectedInstancesTotalRecipientCount <= 0) {
+            return dataPoints;
+        }
+
+        // Conversion Rate Series
+        const datesWithConversions = Enumerable
+            .from(selectedFlowInstances.value)
+            .selectMany(i => i.conversions ?? [])
+            .where(ch => !!ch.date)
+            .orderBy(ch => ch.date!)
+            .groupBy(ch => ch.date!);
+
+        let accummulatedCount = 0;
+        datesWithConversions.forEach(dateWithConversion => {
+            const conversionDate = RockDateTime.parseISO(dateWithConversion.key);
+
+            if (!conversionDate) {
+                return;
+            }
+
+            const conversionsOnDateCount = dateWithConversion.values.length;
+            accummulatedCount += conversionsOnDateCount;
+
+            dataPoints.push({
+                seriesName: "Conversion Rate",
+                label: conversionDate.toLocaleShortDateString(),
+                value: accummulatedCount / selectedInstancesTotalRecipientCount * 100,
+                color: "#68D391"
+            });
+        });
+
+        // Unsubscribes Series
+        const datesWithUnsubscribes = Enumerable
+            .from(selectedFlowInstances.value)
+            .selectMany(i => i.recipients ?? [])
+            .where(r => r.causedUnsubscribe && !!r.unsubscribeDateTime)
+            .orderBy(r => r.unsubscribeDateTime!)
+            .groupBy(r => r.unsubscribeDateTime!);
+
+        accummulatedCount = 0;
+        datesWithUnsubscribes.forEach(grouping => {
+            const unsubscribedDate = RockDateTime.parseISO(grouping.key);
+
+            if (!unsubscribedDate) {
+                return;
+            }
+
+            const unsubscribesOnDateCount = grouping.values.length;
+            accummulatedCount += unsubscribesOnDateCount;
+
+            dataPoints.push({
+                seriesName: "Conversion Rate",
+                label: unsubscribedDate.toLocaleShortDateString(),
+                value: (accummulatedCount / selectedInstancesTotalRecipientCount) * 100,
+                color: "#68D391"
+            });
+        });
+
+
+        return dataPoints;
+    });
+
+    const instanceVsFlowPerformanceAverageDataPoints = computed<ChartNumericDataPointBag[]>(() => {
+        // NOT SPECIFIC TO SELECTED INSTANCE(S) AND ONLY VISIBLE FOR NON-ONE-TIME FLOWS
+        const dataPoints: ChartNumericDataPointBag[] = [];
+
+        selectedFlowInstances.value.forEach((instance, i) => {
+            const recipientCount = instance.recipients?.length ?? 0;
+            const conversionCount = instance.conversions?.length ?? 0;
+            const unsubscribeCount = instance.recipients && Enumerable.from(instance.recipients).where(r => r.causedUnsubscribe).count();
+            const seriesName = selectedFlowInstances.value.length === 1 ? "Instance" : (instance.startDateTime ? RockDateTime.parseISO(instance.startDateTime)?.toLocaleShortDateString() : null) ?? "Instance " + (i + 1);
+
+            const conversionRateDataPoint: ChartNumericDataPointBag = {
+                seriesName,
+                label: "Conversion Rate",
+                value: 0,
+                color: "#38A169"
+            };
+
+            if (recipientCount && conversionCount) {
+                conversionRateDataPoint.value = conversionCount / recipientCount * 100;
+            }
+
+            dataPoints.push(conversionRateDataPoint);
+
+            const unsubscribeRateDataPoint: ChartNumericDataPointBag = {
+                seriesName,
+                label: "Unsubscribe Rate",
+                value: 0,
+                color: "#E53E3E"
+            };
+
+            if (recipientCount && unsubscribeCount) {
+                unsubscribeRateDataPoint.value = unsubscribeCount / recipientCount * 100;
+            }
+
+            dataPoints.push(unsubscribeRateDataPoint);
+        });
+
+        config.communicationFlow?.instances?.forEach((instance, i) => {
+            const recipientCount = instance.recipients?.length ?? 0;
+            const conversionCount = instance.conversions?.length ?? 0;
+            const unsubscribeCount = instance.recipients && Enumerable.from(instance.recipients).where(r => r.causedUnsubscribe).count();
+            const seriesName = selectedFlowInstances.value.length === 1 ? "Instance" : (instance.startDateTime ? RockDateTime.parseISO(instance.startDateTime)?.toLocaleShortDateString() : null) ?? "Instance " + (i + 1);
+
+            const conversionRateDataPoint: ChartNumericDataPointBag = {
+                seriesName,
+                label: "Conversion Rate",
+                value: 0,
+                color: "#38A169"
+            };
+
+            if (recipientCount && conversionCount) {
+                conversionRateDataPoint.value = conversionCount / recipientCount * 100;
+            }
+
+            dataPoints.push(conversionRateDataPoint);
+
+            const unsubscribeRateDataPoint: ChartNumericDataPointBag = {
+                seriesName,
+                label: "Unsubscribe Rate",
+                value: 0,
+                color: "#E53E3E"
+            };
+
+            if (recipientCount && unsubscribeCount) {
+                unsubscribeRateDataPoint.value = unsubscribeCount / recipientCount * 100;
+            }
+
+            dataPoints.push(unsubscribeRateDataPoint);
+        });
+
+        const selectedInstancesTotalRecipientsCount = Enumerable.from(selectedFlowInstances.value).sum(i => i.recipients?.length ?? 0);
+        const selectedInstancesTotalConversionCount = Enumerable.from(selectedFlowInstances.value).sum(i => i.conversions?.length ?? 0);
+        dataPoints.push({
+            seriesName: "Instance",
+            label: "Conversion Rate",
+            value: (selectedInstancesTotalConversionCount / selectedInstancesTotalRecipientsCount) * 100,
+            color: "",
+        });
+
+        const selectedInstancesTotalUnsubscribeCount = Enumerable.from(selectedFlowInstances.value).sum(i => i.recipients ? Enumerable.from(i.recipients).where(r => r.causedUnsubscribe).count() : 0);
+        dataPoints.push({
+            seriesName: "Instance",
+            label: "Unsubscribe Rate",
+            value: (selectedInstancesTotalUnsubscribeCount / selectedInstancesTotalRecipientsCount) * 100,
+            color: "#E53E3E"
+        });
+
+        // Average Series
+        var totalRecipientsCount = config.communicationFlow?.instances ? Enumerable.from(config.communicationFlow.instances).sum(i => i.recipients?.length ?? 0) : 0;
+        dataPoints.push({
+            seriesName: "Average",
+            label: "Conversion Rate",
+            value: (selectedInstancesTotalConversionCount / totalRecipientsCount) * 100,
+            color: "",
+        });
+
+        dataPoints.push({
+            seriesName: "Instance",
+            label: "Unsubscribe Rate",
+            value: (selectedInstancesTotalUnsubscribeCount / selectedInstancesTotalRecipientsCount) * 100,
+            color: "#E53E3E"
+        });
+
+        // Average Series
+        // TBD
+
+        return dataPoints;
+    });
+
+    // #endregion Computed Values
 
     // #region Functions
 

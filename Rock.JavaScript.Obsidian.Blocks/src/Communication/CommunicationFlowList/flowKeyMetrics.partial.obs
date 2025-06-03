@@ -1,0 +1,90 @@
+<template>
+    <Panel>
+        <template #title>
+            Flow Key Metrics <HighlightLabel v-if="isPending" labelType="warning">Pending</HighlightLabel>
+        </template>
+
+        <div class="row">
+            <div class="col-md-4">
+                <Kpi color="green"
+                     :colorShade="700"
+                     iconCssClass="fa fa-bolt"
+                     isCard
+                     label="Conversions"
+                     :value="conversionCount" />
+            </div>
+
+            <div class="col-md-4">
+                <Kpi color="gray"
+                     :colorShade="700"
+                     iconCssClass="fa fa-hourglass-half"
+                     isCard
+                     label="Avg. Time Before Conversion"
+                     :value="averageTimeBeforeConversionKpiValue" />
+            </div>
+
+            <div class="col-md-4">
+                <Kpi color="red"
+                     :colorShade="700"
+                     iconCssClass="fa fa-minus-circle"
+                     isCard
+                     label="Unsubscribes From Flow"
+                     :tooltip="unsubscribesKpiTooltip"
+                     :value="unsubscribesKpiValue" />
+            </div>
+        </div>
+    </Panel>
+</template>
+
+<script setup lang="ts">
+    import { computed, PropType } from "vue";
+    import HighlightLabel from "@Obsidian/Controls/highlightLabel.obs";
+    import Kpi from "@Obsidian/Controls/kpi.obs";
+    import Panel from "@Obsidian/Controls/panel.obs";
+    import { RockTimeSpan } from "@Obsidian/Utility/rockTimeSpan";
+
+    const props = defineProps({
+        averageTimeBeforeConversion: {
+            type: Object as PropType<RockTimeSpan | null | undefined>,
+            required: true
+        },
+
+        conversionCount: {
+            type: Number as PropType<number>,
+            required: true
+        },
+
+        isPending: {
+            type: Boolean as PropType<boolean>,
+            required: true
+        },
+
+        unsubscribesFromFlow: {
+            type: Number as PropType<number>,
+            required: true
+        },
+
+        unsubscribesFromAll: {
+            type: Number as PropType<number>,
+            required: true
+        }
+    });
+
+    // #region Computed Values
+
+    const averageTimeBeforeConversionKpiValue = computed<string>(() => {
+        return props.averageTimeBeforeConversion?.toElapsedString() || "N/A";
+    });
+
+    const unsubscribesKpiValue = computed<string>(() => {
+        const totalUnsubscribes = props.unsubscribesFromFlow + props.unsubscribesFromAll;
+        return totalUnsubscribes > 0 ? `${totalUnsubscribes}` : "N/A";
+    });
+
+    const unsubscribesKpiTooltip = computed<string>(() => {
+        return `Unsubscribes from Flows: ${props.unsubscribesFromFlow}\n` +
+            `Unsubscribes from All: ${props.unsubscribesFromAll}`;
+    });
+
+    // #endregion Computed Values
+</script>

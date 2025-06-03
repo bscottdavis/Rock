@@ -643,7 +643,7 @@ export class RockDateTime {
      * Transforms the date into a human friendly elapsed time string.
      *
      * @example
-     * // Returns "21yrs"
+     * // Returns "25 Years Ago" if the current date is 2025-03-04 and this instance is 2000-03-04.
      * RockDateTime.fromParts(2000, 3, 4).toElapsedString();
      *
      * @returns A string that represents the amount of time that has elapsed.

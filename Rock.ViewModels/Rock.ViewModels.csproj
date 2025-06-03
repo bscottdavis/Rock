@@ -163,6 +163,17 @@
     <Compile Include="Blocks\Communication\CommunicationFlowDetail\CommunicationFlowDetailCompletedFormSettingsBag.cs" />
     <Compile Include="Blocks\Communication\CommunicationFlowDetail\CommunicationFlowDetailCommunicationTemplateBag.cs" />
     <Compile Include="Blocks\Communication\CommunicationFlowList\CommunicationFlowListOptionsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceCompletedFormSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceConversionGoalSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceEnteredDataViewSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceConversionHistoryBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceFlowBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceJoinedGroupSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceJoinedGroupTypeSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceRegisteredSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceTookStepSettingsBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceFlowInstanceBag.cs" />
+    <Compile Include="Blocks\Communication\CommunicationFlowPerformance\CommunicationFlowPerformanceInitializationBox.cs" />
     <Compile Include="Blocks\Communication\SmsConversations\ConversationBag.cs" />
     <Compile Include="Blocks\Communication\SmsConversations\ResponseListingStatusBag.cs" />
     <Compile Include="Blocks\Communication\SmsConversations\SendMessageBag.cs" />
