@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+
 using Newtonsoft.Json;
+
 using Rock.Utility.Enums;
 using Rock.Web.Cache;
 
@@ -119,6 +121,14 @@ namespace Rock.Security
         /// Any authentication cookies issued before this date and time will be rejected. This must not be a future date.
         /// </value>
         public DateTime? RejectAuthenticationCookiesIssuedBefore { get; set; }
+
+        /// <summary>
+        /// Gets or sets the message to show when a person attempts to sign in via a disabled passwordless sign in.
+        /// </summary>
+        /// <value>
+        /// If a person attemps to sign in via a passwordless sign in that is disabled, this message will be shown to them instead of the default message.
+        /// </value>
+        public string MessageForDisabledPasswordlessSignIn { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecuritySettings"/> class.

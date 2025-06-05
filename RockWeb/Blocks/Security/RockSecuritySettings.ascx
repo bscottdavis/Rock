@@ -142,7 +142,7 @@
                                     NumberType="Integer"
                                     MinimumValue="1"
                                     Label="Passwordless Sign In Daily IP Throttle"
-                                    Help="The maxiumum number of passwordless attempts that are allowed from a single IP address in a single day."
+                                    Help="The maximum number of passwordless attempts that are allowed from a single IP address in a single day."
                                     CssClass="input-width-sm" />
                             </div>
                             <div class="col-md-6">
@@ -166,6 +166,17 @@
                                     Help="Determines which individuals can use passwordless login depending on their protection profile. If you turn off Passwordless login for a Protection Profile, make sure two-factor authentication (2FA) for that Protection Profile is also turned off. If two-factor authentication (2FA) is enabled without Passwordless login, someone could get locked out."
                                     RepeatDirection="Horizontal" />
                             </div>
+                            <div class="col-md-6">
+                                <Rock:RockTextBox
+                                    runat="server"
+                                    TextMode="MultiLine"
+                                    Rows="3"
+                                    ID="tbMessageForDisabledPasswordlessSignIn"
+                                    Label="Message for Disabled Passwordless Sign-In"
+                                    Help="The message shown when a passwordless sign-in fails due to the protection profile having passwordless sign-in disabled." />
+                            </div>
+                        </div>
+                        <div class="row mt-3">
                             <div class="col-md-6">
                                 <Rock:RockDropDownList
                                     runat="server"
