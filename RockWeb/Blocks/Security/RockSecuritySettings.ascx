@@ -169,11 +169,11 @@
                             <div class="col-md-6">
                                 <Rock:RockTextBox
                                     runat="server"
-                                    TextMode="MultiLine"
-                                    Rows="3"
                                     ID="tbMessageForDisabledPasswordlessSignIn"
                                     Label="Message for Disabled Passwordless Sign-In"
-                                    Help="The message shown when a passwordless sign-in fails due to the protection profile having passwordless sign-in disabled." />
+                                    Help="The message shown when a passwordless sign-in fails due to the protection profile having passwordless sign-in disabled."
+                                    TextMode="MultiLine"
+                                    Rows="3" />
                             </div>
                         </div>
                         <div class="row mt-3">

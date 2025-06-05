@@ -126,9 +126,10 @@ namespace Rock.Security
         /// Gets or sets the message to show when a person attempts to sign in via a disabled passwordless sign in.
         /// </summary>
         /// <value>
-        /// If a person attemps to sign in via a passwordless sign in that is disabled, this message will be shown to them instead of the default message.
+        /// If a person attemps to sign in via a passwordless sign in that is disabled, this message will be shown to them.
+        /// By default, this message is set to the value used before this setting existed to preserve existing behavior.
         /// </value>
-        public string MessageForDisabledPasswordlessSignIn { get; set; }
+        public string MessageForDisabledPasswordlessSignIn { get; set; } = "Passwordless sign-in not available for your protection profile. Please request assistance from the organization administrator.";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecuritySettings"/> class.
